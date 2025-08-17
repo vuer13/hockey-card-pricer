@@ -2,4 +2,7 @@ venv/
 data/
 train/
 test/
-val
+val/
+runs/
+dataset/
+labels/
