@@ -8,4 +8,8 @@ dataset/
 labels/
 
 colab_training.ipynb
-final_model.pt
+
+models/
+
+.DS_Store
+.git
