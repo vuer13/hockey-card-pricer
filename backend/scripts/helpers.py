@@ -24,3 +24,19 @@ def load_models():
     ocr = PaddleOCR(use_angle_cls=True, lang="en")
     
     return yolo, frcnn, ocr
+
+def detect_card(yolo, image):
+    """Using yolo, detect the card in the image and return the cropped card image."""
+    # Yolo detection
+    res = yolo(image)[0]
+    
+    # Loop through all boxes
+    for box in res.boxes:
+        # Get card mappings
+        if yolo.names[int(box.cls[0])] == "hockey_card":
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            
+            # Return cropped card
+            return image[y1:y2, x1:x2]
+
+    return None
