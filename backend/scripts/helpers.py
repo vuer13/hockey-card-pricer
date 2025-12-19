@@ -6,6 +6,7 @@ from paddleocr import PaddleOCR
 import torchvision.transforms as T
 
 def load_models():
+    # Error handling for model loading
     try:
         yolo = YOLO("./models/final_model.pt")
     except Exception as e:
@@ -27,6 +28,11 @@ def load_models():
 
 def detect_card(yolo, image):
     """Using yolo, detect the card in the image and return the cropped card image."""
+    
+    # Error handling for model loading
+    if yolo is None:
+        return None
+    
     # Yolo detection
     res = yolo(image)[0]
     
@@ -40,3 +46,74 @@ def detect_card(yolo, image):
             return image[y1:y2, x1:x2]
 
     return None
+
+def detect_boxes(fastrcnn, card):
+    """Using Faster R-CNN, detect boxes in the card image and return predictions."""
+    
+    if fastrcnn is None:
+        return []
+    
+    LABEL_NAMES = {
+        1: "name",
+        2: "card number",
+        3: "card series",
+        4: "team name",
+        5: "card type"
+    }
+    
+    transform = T.ToTensor()
+    preds = fastrcnn([transform(card)])
+    
+    detected_boxes = []
+    
+    for box, score, label in zip(preds["boxes"], preds["scores"], preds["labels"]):
+        # Only take scores above 0.85
+        if score > 0.85: 
+            detections.append({
+                "bbox": tuple(map(int, box.tolist())), # Convert box to int tuple
+                "field": LABEL_NAMES[int(label)] # Map label to field name
+            })
+
+    return detections
+
+def deskew(image):
+    """To correct tilt/angle in the image"""
+    
+    # Converts image to gray scale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Get all non-gray pixels, return as (x,y) coordinates
+    coords = np.column_stack(np.where(gray > 0))
+    
+    if len(coords) < 10:
+        return image  # Not enough points to compute angle
+    
+    # Minimum rectangle area, angle telling text orientation
+    angle = cv2.minAreaRect(coords)[-1]
+    
+    if angle < -45:
+        angle += 90
+        
+    h, w = image.shape[:2]
+
+    # Rotation matrix centered at the image center
+    M = cv2.getRotationMatrix2D(
+        (w // 2, h // 2),  # center of rotation
+        angle,            # rotation angle
+        1                 # no scaling
+    )
+
+    # Rotate the image to straighten the text
+    return cv2.warpAffine(image, M, (w, h))
+
+def ocr_text(ocr, image):
+    """Using PaddleOCR, extract text from the image"""
+    
+    # ocr on the image
+    result = ocr.ocr(image, cls=True)
+
+    # Empty string if ocr finds nothing
+    if not result or not result[0]:
+        return ""
+
+    return " ".join([line[1][0] for line in result[0]])
