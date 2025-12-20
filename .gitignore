@@ -7,6 +7,7 @@ val/
 runs/
 dataset/
 labels/
+.env
 
 colab_training.ipynb
 
