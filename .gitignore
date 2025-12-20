@@ -1,4 +1,5 @@
 venv/
+env/
 data/
 train/
 test/
@@ -16,5 +17,8 @@ models/
 
 card.jpg
 card_crop.jpg
+*.jpg
 
 __pycache__/
+
+.python-version
