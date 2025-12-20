@@ -53,28 +53,30 @@ def detect_boxes(fastrcnn, card):
     if fastrcnn is None:
         return []
     
+    fastrcnn.eval()  # Ensure model is in eval mode
+    
     LABEL_NAMES = {
         1: "name",
-        2: "card number",
-        3: "card series",
-        4: "team name",
-        5: "card type"
+        2: "card_number",
+        3: "card_series",
+        4: "team_name",
+        5: "card_type"
     }
     
     transform = T.ToTensor()
-    preds = fastrcnn([transform(card)])
+    preds = fastrcnn([transform(card)])[0]
     
     detected_boxes = []
     
     for box, score, label in zip(preds["boxes"], preds["scores"], preds["labels"]):
         # Only take scores above 0.85
         if score > 0.85: 
-            detections.append({
+            detected_boxes.append({
                 "bbox": tuple(map(int, box.tolist())), # Convert box to int tuple
                 "field": LABEL_NAMES[int(label)] # Map label to field name
             })
 
-    return detections
+    return detected_boxes
 
 def deskew(image):
     """To correct tilt/angle in the image"""
