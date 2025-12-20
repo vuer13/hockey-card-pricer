@@ -8,6 +8,7 @@ runs/
 dataset/
 labels/
 .env
+uploads/
 
 colab_training.ipynb
 
