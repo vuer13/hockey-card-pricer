@@ -4,17 +4,20 @@ from ultralytics import YOLO
 import torch
 from paddleocr import PaddleOCR
 import torchvision.transforms as T
+from torchvision.models.detection import fasterrcnn_resnet50_fpn
 
 def load_models():
     # Error handling for model loading
     try:
-        yolo = YOLO("./models/final_model.pt")
+        yolo = YOLO("../models/final_model.pt")
     except Exception as e:
         print(f"Error loading models: {e}")
         return None, None, None
     
     try:
-        frcnn = torch.load("./models/best_model.pth", map_location="cpu")
+        frcnn = fasterrcnn_resnet50_fpn(num_classes=6)
+        checkpoint = torch.load("../models/best_model.pth", map_location="cpu")
+        frcnn.load_state_dict(checkpoint["model_state_dict"])
     except Exception as e:
         print(f"Error loading models: {e}")
         return None, None, None
@@ -41,9 +44,13 @@ def detect_card(yolo, image):
         # Get card mappings
         if yolo.names[int(box.cls[0])] == "hockey_card":
             x1, y1, x2, y2 = map(int, box.xyxy[0])
-            
-            # Return cropped card
-            return image[y1:y2, x1:x2]
+            crop = image[y1:y2, x1:x2]
+
+            # Return bounding box and cropped card image
+            return {
+                "bbox": [x1, y1, x2, y2],
+                "card_crop": crop
+            }
 
     return None
 

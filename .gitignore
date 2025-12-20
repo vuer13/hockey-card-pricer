@@ -13,3 +13,8 @@ models/
 
 .DS_Store
 .git
+
+card.jpg
+card_crop.jpg
+
+__pycache__/
