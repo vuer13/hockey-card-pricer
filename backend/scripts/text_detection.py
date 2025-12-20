@@ -31,16 +31,17 @@ class TextExtraction:
 
         return fields
 
-_, frcnn, reader = load_models()
+def pipeline_b():
+    _, frcnn, reader = load_models()
 
-pipeline_b = TextExtraction(frcnn, reader)
+    pipeline_b = TextExtraction(frcnn, reader)
 
-card_crop = cv2.imread("card_crop.jpg")
+    card_crop = cv2.imread("card_crop.jpg")
 
-if card_crop is None:
-    raise ValueError("Could not load test card crop")
+    if card_crop is None:
+        raise ValueError("Could not load test card crop")
 
-fields = pipeline_b.run(card_crop)
+    fields = pipeline_b.run(card_crop)
 
-print("Extracted fields:")
-print(fields)
+    print("Extracted fields:")
+    print(fields)
