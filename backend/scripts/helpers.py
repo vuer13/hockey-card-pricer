@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import torch
-from paddleocr import PaddleOCR
+import easyocr
 import torchvision.transforms as T
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
 
@@ -25,9 +25,9 @@ def load_models():
     frcnn.eval() # Set to eval mode for inference
     
     # PaddleOCR model loading to extract text
-    ocr = PaddleOCR(use_angle_cls=True, lang="en")
+    reader = easyocr.Reader(['en'], gpu=False)
     
-    return yolo, frcnn, ocr
+    return yolo, frcnn, reader
 
 def detect_card(yolo, image):
     """Using yolo, detect the card in the image and return the cropped card image."""
@@ -115,14 +115,6 @@ def deskew(image):
     # Rotate the image to straighten the text
     return cv2.warpAffine(image, M, (w, h))
 
-def ocr_text(ocr, image):
-    """Using PaddleOCR, extract text from the image"""
-    
-    # ocr on the image
-    result = ocr.ocr(image, cls=True)
-
-    # Empty string if ocr finds nothing
-    if not result or not result[0]:
-        return ""
-
-    return " ".join([line[1][0] for line in result[0]])
+def easy_ocr(reader, image):
+    result = reader.readtext(image, detail=0)
+    return " ".join(result)

@@ -31,4 +31,3 @@ def test_a():
         cv2.imwrite("card_crop.jpg", out["card_crop"])
     else:
         print("No card detected")
-        
