@@ -7,7 +7,7 @@ import numpy as np
 load_dotenv()
 
 def get_ebay_token():
-    """Authenticates with eBay and returns an OAuth access token to browse their API."""
+    """Authenticates with eBay and returns an OAuth access token to browse their API"""
 
     client_id = os.getenv("EBAY_CLIENT_ID")
     client_secret = os.getenv("EBAY_CLIENT_SECRET")
@@ -88,7 +88,7 @@ def estimate_price(prices):
     q1, q3 = np.percentile(prices, [25, 75])
     iqr = q3 - q1
 
-    # Remove outliers
+    # Remove outliers using IQR formula
     filtered = prices[
         (prices >= q1 - 1.5 * iqr) &
         (prices <= q3 + 1.5 * iqr)
