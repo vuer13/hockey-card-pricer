@@ -16,7 +16,7 @@ class TextExtraction:
             x1, y1, x2, y2 = det["bbox"]
             field = det["field"]
 
-            crop = card_crop[y1:y2, x1:x2] # Crop the area
+            crop = image[y1:y2, x1:x2] # Crop the area
             # crop = deskew(crop) # Deskew the crop
             # crop = preprocess_for_ocr(crop)
             
