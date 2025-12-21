@@ -12,6 +12,9 @@ uploads/
 
 colab_training.ipynb
 
+temp.py
+tmp/
+
 models/
 
 .DS_Store

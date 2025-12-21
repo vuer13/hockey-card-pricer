@@ -6,27 +6,24 @@ import easyocr
 import torchvision.transforms as T
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
 
+from utils.s3_models import download_model
+
 def load_models():
-    # Error handling for model loading
-    try:
-        yolo = YOLO("./models/final_model.pt")
-    except Exception as e:
-        print(f"Error loading models: {e}")
-        return None, None, None
-    
-    try:
-        frcnn = fasterrcnn_resnet50_fpn(num_classes=6)
-        checkpoint = torch.load("./models/best_model.pth", map_location="cpu")
-        frcnn.load_state_dict(checkpoint["model_state_dict"])
-    except Exception as e:
-        print(f"Error loading models: {e}")
-        return None, None, None
-    
-    frcnn.eval() # Set to eval mode for inference
-    
-    # PaddleOCR model loading to extract text
-    reader = easyocr.Reader(['en'], gpu=False)
-    
+    yolo_path = "models/final_model.pt"
+    frcnn_path = "models/best_model.pth"
+
+    download_model("models/final_model.pt", yolo_path)
+    download_model("models/best_model.pth", frcnn_path)
+
+    yolo = YOLO(yolo_path)
+
+    frcnn = fasterrcnn_resnet50_fpn(num_classes=6)
+    checkpoint = torch.load(frcnn_path, map_location="cpu")
+    frcnn.load_state_dict(checkpoint["model_state_dict"])
+    frcnn.eval()
+
+    reader = easyocr.Reader(["en"], gpu=False)
+
     return yolo, frcnn, reader
 
 def detect_card(yolo, image):
