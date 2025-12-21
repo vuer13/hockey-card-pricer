@@ -89,6 +89,33 @@ def extract_text(req: CropRequest):
     
     return ok(fields)
 
+@app.post('/manual-detect-extract')
+def manual_detect_extract(file: UploadFile = File(...)):
+    """Receives manually cropped image and extracts text"""
+    
+    # Save uploaded image
+    ext = file.filename.split(".")[-1]
+    image_id = str(uuid.uuid4())  # Generates identifier so uploaded files don't get overwritten
+    crop_path = f"{CROP_DIR}/{image_id}_crop.jpg"
+    
+    with open(crop_path, "wb") as f:
+        f.write(file.file.read())
+        
+    image = cv2.imread(crop_path)
+    
+    if image is None:
+        return err("INVALID_IMAGE", "Unable to read image")
+    
+    fields = pipeline_two.run(image)
+    
+    if not fields:
+        return err("OCR_FAILED", "Unable to extract text")
+    
+    return ok({
+        "crop_path": crop_path,
+        "fields": fields
+    })
+
 # Endpoint handles upload + detection
 @app.post('/detect-card')
 def detect_card(file: UploadFile = File(...)):
