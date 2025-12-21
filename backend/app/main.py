@@ -1,13 +1,12 @@
 from fastapi import FastAPI, UploadFile, File
+from pydantic import BaseModel
 import os
 import uuid
 import cv2
-from pydantic import BaseModel
-
-from ultralytics import YOLO
 
 from scripts.card_detection import CardDetectionPipeline
 from scripts.text_detection import TextExtraction
+from scripts.pricing import price_card
 from scripts.helpers import load_models
 
 app = FastAPI()
@@ -38,25 +37,33 @@ class ConfirmCardRequest(BaseModel):
     image_path: str
     crop_path: str
     
+class PriceCardRequest(BaseModel):
+    name: str
+    card_series: str
+    card_number: str
+    
+# Response Helpers
+def ok(data):
+    return {"status": "ok", "data": data, "error": None}
+
+def err(code, message):
+    return {
+        "status": "error",
+        "data": None,
+        "error": {"code": code, "message": message}
+    }
+    
 @app.post("/confirm-card")
 def confirm_card(req: ConfirmCardRequest):
     """Endpoint to confirm card details"""
     
     if not req.name or not req.card_series:
-        return {"error": "Missing required fields"}
-    
-    confirmed_card = {
-        "name": req.name.strip(),
-        "card_series": req.card_series.strip(),
-        "card_number": req.card_number.strip(),
-        "image_path": req.image_path,
-        "crop_path": req.crop_path
-    }
+        return err("INVALID_INPUT", "Missing required fields")
 
-    return {
-        "status": "confirmed",
-        "card": confirmed_card
-    }
+    return ok({
+        "confirmed": True,
+        "card": req.dict()
+    })
 
 
 @app.post("/extract-text")
@@ -66,17 +73,20 @@ def extract_text(req: CropRequest):
     crop_path = req.crop_path
     
     if not os.path.exists(crop_path):
-        return {"error": "Cropped image path does not exist"}
+        return err("INVALID_INPUT", "Crop path does not exist")
 
     # Read cropped image
     card_crop = cv2.imread(crop_path)
+    
     if card_crop is None:
-        return {"error": "Could not read cropped image"}
+        return err("INVALID_IMAGE", "Unable to read image")
     
     # Run text extraction pipeline
     fields = pipeline_two.run(card_crop)
+    if not fields:
+        return err("OCR_FAILED", "Unable to extract text")
     
-    return {"fields": fields}
+    return ok(fields)
 
 # Endpoint handles upload + detection
 @app.post('/detect-card')
@@ -95,9 +105,7 @@ def detect_card(file: UploadFile = File(...)):
     results = pipeline_one.run(image_path)
     
     if results is None:
-        return {
-            "error": "No card detected"
-        }
+        return err("NO_CARD_DETECTED", "No card detected in image")
     
     # Save cropped card image
     crop_path = f"{CROP_DIR}/{image_id}_crop.jpg"
