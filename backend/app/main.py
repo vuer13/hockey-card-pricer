@@ -29,6 +29,34 @@ pipeline_two = TextExtraction(model, ocr)
 # Since crop_path is returned in json from detect-card endpoint, we can use that directly here instead of URL
 class CropRequest(BaseModel):
     crop_path: str
+    
+class ConfirmCardRequest(BaseModel):
+    name: str
+    card_series: str
+    card_number: str
+    image_path: str
+    crop_path: str
+    
+@app.post("/confirm-card")
+def confirm_card(req: ConfirmCardRequest):
+    """Endpoint to confirm card details"""
+    
+    if not req.name or not req.card_series:
+        return {"error": "Missing required fields"}
+    
+    confirmed_card = {
+        "name": req.name.strip(),
+        "card_series": req.card_series.strip(),
+        "card_number": req.card_number.strip(),
+        "image_path": req.image_path,
+        "crop_path": req.crop_path
+    }
+
+    return {
+        "status": "confirmed",
+        "card": confirmed_card
+    }
+
 
 @app.post("/extract-text")
 def extract_text(req: CropRequest):
