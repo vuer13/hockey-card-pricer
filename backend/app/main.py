@@ -23,7 +23,6 @@ CROP_DIR = "uploads/crops"
 os.makedirs(CROP_DIR, exist_ok=True)
 
 # Loading models and ocr and pipelines
-yolo, model, ocr = load_models()
 pipeline_one = CardDetectionPipeline(yolo)
 pipeline_two = TextExtraction(model, ocr)
 
@@ -128,6 +127,11 @@ def upload_image(file: UploadFile = File(...)):
         "image_id": image_id,
         "image_path": image_path
     }
+    
+@app.on_event("startup")
+def startup():
+    global yolo, model, ocr
+    yolo, model, ocr = load_models()
 
 # To ensure API is working
 @app.get("/health-check")
