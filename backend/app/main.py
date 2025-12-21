@@ -117,6 +117,18 @@ def detect_card(file: UploadFile = File(...)):
         "bbox": results["bbox"]
     }
     
+@app.post('/price-card')
+def price_card(req: PriceCardRequest):
+    """Prices a card based on its details"""
+    
+    result = price_card(req.dict())
+    pricing = result.get("pricing")
+    
+    if not pricing:
+        return err("PRICING_NO_DATA", "Unable to price card with given details")
+    
+    return ok({ pricing})
+    
 # Upload endpoint only; no cropping
 @app.post('/upload-image')
 def upload_image(file: UploadFile = File(...)):
