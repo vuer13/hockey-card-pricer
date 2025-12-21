@@ -155,7 +155,7 @@ def price_card(req: PriceCardRequest):
     if not pricing:
         return err("PRICING_NO_DATA", "Unable to price card with given details")
     
-    return ok({ pricing})
+    return ok({pricing})
 
 """
 # Upload endpoint only; no cropping
