@@ -9,14 +9,14 @@ from torchvision.models.detection import fasterrcnn_resnet50_fpn
 def load_models():
     # Error handling for model loading
     try:
-        yolo = YOLO("../models/final_model.pt")
+        yolo = YOLO("./models/final_model.pt")
     except Exception as e:
         print(f"Error loading models: {e}")
         return None, None, None
     
     try:
         frcnn = fasterrcnn_resnet50_fpn(num_classes=6)
-        checkpoint = torch.load("../models/best_model.pth", map_location="cpu")
+        checkpoint = torch.load("./models/best_model.pth", map_location="cpu")
         frcnn.load_state_dict(checkpoint["model_state_dict"])
     except Exception as e:
         print(f"Error loading models: {e}")
@@ -38,6 +38,8 @@ def detect_card(yolo, image):
     
     # Yolo detection
     res = yolo(image)[0]
+    print("Detected classes:", [int(box.cls[0]) for box in res.boxes])
+    print("Class names:", yolo.names)
     
     # Loop through all boxes
     for box in res.boxes:

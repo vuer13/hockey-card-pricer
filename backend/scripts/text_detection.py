@@ -1,5 +1,5 @@
 import cv2
-from helpers import load_models, detect_boxes, deskew, easy_ocr
+from scripts.helpers import load_models, detect_boxes, deskew, easy_ocr
 
 class TextExtraction:
     def __init__(self, model, ocr):

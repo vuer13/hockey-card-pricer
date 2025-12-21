@@ -1,5 +1,5 @@
 import cv2
-from helpers import detect_card, load_models
+from scripts.helpers import detect_card, load_models
 
 class CardDetectionPipeline:
     def __init__(self, yolo):
