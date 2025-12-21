@@ -12,6 +12,8 @@ from scripts.helpers import load_models
 
 app = FastAPI()
 
+# TODO: Use AWS Storage instead of local; host models on S3
+
 # Temporary upload directory, will use a proper storage solution later
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
