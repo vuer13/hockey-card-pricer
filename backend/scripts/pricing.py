@@ -96,10 +96,10 @@ def estimate_price(prices):
     
     if len(prices) < 3:
         return {
-            "estimate": round(float(np.median(filtered)), 2),
-            "low": round(float(np.percentile(filtered, 25)), 2),
-            "high": round(float(np.percentile(filtered, 75)), 2),
-            "num_sales": int(len(filtered))
+            "estimate": round(float(np.median(prices)), 2),
+            "low": round(float(np.percentile(prices, 25)), 2),
+            "high": round(float(np.percentile(prices, 75)), 2),
+            "num_sales": int(len(prices))
         }
 
     # Compute interquartile range (IQR)
@@ -129,8 +129,7 @@ def price_card(fields):
     terms = [
         fields.get('card_series'),
         fields.get('name'),
-        fields.get('card_number'),
-        f"Card {fields.get('card_type')}" if fields.get('card_type') else ""
+        f"{fields.get('card_type')}" if fields.get('card_type') != "Base" else fields.get('card_number')
     ]
     
     query = " ".join([t for t in terms if t]).strip()
@@ -150,10 +149,14 @@ def price_card(fields):
     
 def test():
     test_card = {
-        "card_series": "2018-19",
-        "name": "Ryan Suter Trilogy Hockey",
-        "card_number": "24"
+        "card_series": "2021-22 Upper Deck Series 2 Hockey",
+        "name": "Cole Caufield",
+        "card_number": "236",
+        "card_type": "Base"
     }
     
     result = price_card(test_card)
     print(result)
+
+if __name__ == "__main__":
+    test()
