@@ -11,6 +11,9 @@ def get_ebay_token():
 
     client_id = os.getenv("EBAY_CLIENT_ID")
     client_secret = os.getenv("EBAY_CLIENT_SECRET")
+    
+    if not client_id or not client_secret:
+        raise ValueError("Missing EBAY_CLIENT_ID or EBAY_CLIENT_SECRET in .env")
 
     # Encode client_id:client_secret in base64
     auth = base64.b64encode(
@@ -40,38 +43,44 @@ def get_ebay_token():
 
     return response.json()["access_token"]
 
-def get_sold_prices(query, token, limit=25):
-    """eBay sold listings search; Returns a list of sale prices"""
-
-    # Authorization headers
+def get_sold_prices(query, limit=25):
+    """eBay sold listings search active; Returns a list of sale prices"""
+    
+    token = get_ebay_token()
+    
     headers = {
         "Authorization": f"Bearer {token}",
-        "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"
+        "Content-Type": "application/json",
+        "X-EBAY-C-MARKETPLACE-ID": "EBAY_US" 
     }
 
     params = {
-        "q": query,             # search string
-        "filter": "soldItems",  # only SOLD listings
-        "limit": limit
+        "q": query,
+        "limit": limit,
+        "sort": "price" # Sort by price (lowest first helps find the 'floor')
     }
 
-    response = requests.get(
-        "https://api.ebay.com/buy/browse/v1/item_summary/search",
-        headers=headers,
-        params=params
-    )
+    # Browse API
+    url = "https://api.ebay.com/buy/browse/v1/item_summary/search"
+    
+    response = requests.get(url, headers=headers, params=params)
+    
+    # Handle API errors
+    if response.status_code != 200:
+        print(f"API Error: {response.status_code} - {response.text}")
+        return []
 
-    response.raise_for_status()
     data = response.json()
-
     prices = []
 
-    # Extract prices from response
-    for item in data.get("itemSummaries", []):
-        price = item.get("price", {}).get("value")
-        if price:
-            prices.append(float(price))
-
+    if "itemSummaries" in data:
+        for item in data["itemSummaries"]:
+            # Extract price value
+            price_obj = item.get("price", {})
+            price = price_obj.get("value")
+            if price:
+                prices.append(float(price))
+                            
     return prices
 
 
@@ -80,9 +89,18 @@ def estimate_price(prices):
 
     # Return none if no prices
     if not prices:
+        print("No prices found")
         return None
-
+    
     prices = np.array(prices)
+    
+    if len(prices) < 3:
+        return {
+            "estimate": round(float(np.median(filtered)), 2),
+            "low": round(float(np.percentile(filtered, 25)), 2),
+            "high": round(float(np.percentile(filtered, 75)), 2),
+            "num_sales": int(len(filtered))
+        }
 
     # Compute interquartile range (IQR)
     q1, q3 = np.percentile(prices, [25, 75])
@@ -93,6 +111,9 @@ def estimate_price(prices):
         (prices >= q1 - 1.5 * iqr) &
         (prices <= q3 + 1.5 * iqr)
     ]
+    
+    if len(filtered) == 0:
+        return None
 
     # Pricing summary
     return {
@@ -105,16 +126,34 @@ def estimate_price(prices):
 def price_card(fields):
     """Takes confirmed card fields and returns a market estimate"""
 
-    token = get_ebay_token()
-
-    # Build search query
-    query = f"{fields['name']}, {fields['card_series']}, Card Number:{fields['card_number']}"
-
-    # Pricing
-    prices = get_sold_prices(query, token)
+    terms = [
+        fields.get('card_series'),
+        fields.get('name'),
+        fields.get('card_number'),
+        f"Card {fields.get('card_type')}" if fields.get('card_type') else ""
+    ]
+    
+    query = " ".join([t for t in terms if t]).strip()
+    print(f"Searching eBay")
+    
+    prices = get_sold_prices(query)
+    
+    if not prices:
+        return {"query": query, "error": "No sales data found"}
+        
     pricing = estimate_price(prices)
 
     return {
         "query": query,
         "pricing": pricing
     }
+    
+def test():
+    test_card = {
+        "card_series": "2018-19",
+        "name": "Ryan Suter Trilogy Hockey",
+        "card_number": "24"
+    }
+    
+    result = price_card(test_card)
+    print(result)
