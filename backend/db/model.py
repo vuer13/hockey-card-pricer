@@ -2,8 +2,9 @@ import uuid
 from sqlalchemy import Column, String, Float, Integer, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+from .database import Base
 
-class CardInfo():
+class CardInfo(Base):
     __tablename__ = 'card_info'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
@@ -13,7 +14,7 @@ class CardInfo():
     team_name = Column(String)
     created_at = Column(DateTime, server_default=func.now())
     
-class CardImage():
+class CardImage(Base):
     __tablename__ = 'card_image'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     card_info_id = Column(UUID(as_uuid=True), ForeignKey('card_info.id'), nullable=False)
@@ -21,7 +22,7 @@ class CardImage():
     s3_key = Column(String, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     
-class CardPrice():
+class CardPrice(Base):
     __tablename__ = 'card_price'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     card_info_id = Column(UUID(as_uuid=True), ForeignKey('card_info.id'), nullable=False)
