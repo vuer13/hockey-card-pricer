@@ -88,12 +88,14 @@ def confirm_card(req: ConfirmCardRequest):
     
     db.add(image)
     db.commit()
+    
+    db.close()
 
     return ok({"card_id": str(card.id)})
 
 
 @app.post("/extract-text")
-def extract_text(req: CropRequest):
+def extract_text(file: UploadFile = File(...)):
     """Extracts text from a cropped card image"""
     
     # Save temp image
@@ -104,6 +106,8 @@ def extract_text(req: CropRequest):
         f.write(file.file.read())
 
     image = cv2.imread(tmp_path)
+    
+    os.remove(tmp_path)
     
     if image is None:
         return err("INVALID_IMAGE", "Could not read uploaded image")
@@ -138,7 +142,6 @@ def manual_detect_extract(file: UploadFile = File(...)):
         return err("OCR_FAILED", "Unable to extract text")
     
     return ok({
-        "crop_path": crop_path,
         "fields": fields
     })
 
@@ -177,7 +180,12 @@ def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
 def price_card(req: PriceCardRequest):
     """Prices a card based on its details"""
     
-    result = run_pricing(req.dict())
+    pricing_input = {
+        "name": req.name,
+        "card_series": req.card_series,
+        "card_number": req.card_number
+    }
+    result = run_pricing(pricing_input)
     pricing = result.get("pricing")
     
     if not pricing:
@@ -196,8 +204,44 @@ def price_card(req: PriceCardRequest):
     db.add(price)
     db.commit()
     
+    db.close()
+    
     return ok({pricing})
 
+# Read endpoints
+@app.get("/card/{card_id}")
+def get_card(card_id: str):
+    """Fetches card details by ID (PK)"""
+    
+    db = SessionLocal()
+    card = db.query(Card).get(card_id)
+    
+    db.close()
+    return ok({
+        "id": card.id,
+        "name": card.name,
+        "card_series": card.card_series,
+        "card_number": card.card_number,
+        "team_name": card.team_name,
+        "card_type": card.card_type
+    }) if card else err("INVALID_INPUT", "Not found")
+
+@app.get("/card/{card_id}/prices")
+def get_prices(card_id: str):
+    """Fetches card pricing details by Card ID (FK)"""
+    
+    db = SessionLocal()
+    prices = db.query(CardPrice).filter(CardPrice.card_id == card_id).all()
+    
+    db.close()
+    return ok([{
+        "id": p.id,
+        "estimate": p.estimate,
+        "low": p.low,
+        "high": p.high,
+        "num_sales": p.num_sales
+    } for p in prices]) if prices else err("NOT_FOUND", "No prices found")
+    
 """
 # Upload endpoint only; no cropping
 @app.post('/upload-image')
