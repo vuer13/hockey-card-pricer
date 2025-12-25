@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from pydantic import BaseModel
+import numpy as np
 import os
 import uuid
 import cv2
@@ -123,15 +124,9 @@ def extract_text(file: UploadFile = File(...)):
 def manual_detect_extract(file: UploadFile = File(...)):
     """Receives manually cropped image and extracts text"""
     
-    # Save uploaded image
-    ext = file.filename.split(".")[-1]
-    image_id = str(uuid.uuid4())  # Generates identifier so uploaded files don't get overwritten
-    crop_path = f"{CROP_DIR}/{image_id}_crop.jpg"
-    
-    with open(crop_path, "wb") as f:
-        f.write(file.file.read())
-        
-    image = cv2.imread(crop_path)
+    image_bytes = file.file.read()
+    np_arr = np.frombuffer(image_bytes, np.uint8)
+    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     
     if image is None:
         return err("INVALID_IMAGE", "Unable to read image")
@@ -141,9 +136,7 @@ def manual_detect_extract(file: UploadFile = File(...)):
     if not fields:
         return err("OCR_FAILED", "Unable to extract text")
     
-    return ok({
-        "fields": fields
-    })
+    return ok({"fields": fields})
 
 # Endpoint handles upload + detection
 @app.post('/detect-card')
