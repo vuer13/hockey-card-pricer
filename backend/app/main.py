@@ -1,13 +1,19 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from pydantic import BaseModel
+import numpy as np
 import os
 import uuid
 import cv2
 
 from scripts.card_detection import CardDetectionPipeline
 from scripts.text_detection import TextExtraction
-from scripts.pricing import price_card
+from scripts.pricing import price_card as run_pricing
 from scripts.helpers import load_models
+
+from utils.s3_images import upload_image
+
+from db.database import SessionLocal
+from db.models import Card, CardImage, CardPrice
 
 app = FastAPI()
 
@@ -25,20 +31,18 @@ os.makedirs(CROP_DIR, exist_ok=True)
 yolo, model, ocr = load_models()
 pipeline_one = CardDetectionPipeline(yolo)
 pipeline_two = TextExtraction(model, ocr)
-
-# Request schema; to accept crop path for text extraction
-# Since crop_path is returned in json from detect-card endpoint, we can use that directly here instead of URL
-class CropRequest(BaseModel):
-    crop_path: str
     
 class ConfirmCardRequest(BaseModel):
     name: str
     card_series: str
     card_number: str
-    image_path: str
-    crop_path: str
+    team_name: str | None = None
+    card_type: str | None = "Base"
+    image_type: str
+    s3_key: str
     
 class PriceCardRequest(BaseModel):
+    card_id: str
     name: str
     card_series: str
     card_number: str
@@ -56,52 +60,73 @@ def err(code, message):
     
 @app.post("/confirm-card")
 def confirm_card(req: ConfirmCardRequest):
-    """Endpoint to confirm card details"""
+    """Endpoint to confirm card details and store in DB"""
     
-    if not req.name or not req.card_series:
+    if not req.name or not req.card_series or not req.card_number:
         return err("INVALID_INPUT", "Missing required fields")
+    
+    db = SessionLocal()
+    
+    # Card Information
+    card = Card(
+        name=req.name,
+        card_series=req.card_series,
+        card_number=req.card_number,
+        team_name=req.team_name,
+        card_type=req.card_type if req.card_type else "Base"
+    )
+    
+    # Adding Card to DB
+    db.add(card)
+    db.commit()
+    db.refresh(card)
+    
+    image = CardImage(
+        card_id=card.id,
+        image_type=req.image_type,
+        s3_key=req.s3_key
+    )
+    
+    db.add(image)
+    db.commit()
+    
+    db.close()
 
-    return ok({
-        "confirmed": True,
-        "card": req.dict()
-    })
+    return ok({"card_id": str(card.id)})
 
 
 @app.post("/extract-text")
-def extract_text(req: CropRequest):
+def extract_text(file: UploadFile = File(...)):
     """Extracts text from a cropped card image"""
     
-    crop_path = req.crop_path
-    
-    if not os.path.exists(crop_path):
-        return err("INVALID_INPUT", "Crop path does not exist")
+    # Save temp image
+    ext = file.filename.split(".")[-1]
+    tmp_path = f"/tmp/{uuid.uuid4()}.{ext}"
 
-    # Read cropped image
-    card_crop = cv2.imread(crop_path)
+    with open(tmp_path, "wb") as f:
+        f.write(file.file.read())
+
+    image = cv2.imread(tmp_path)
     
-    if card_crop is None:
-        return err("INVALID_IMAGE", "Unable to read image")
+    os.remove(tmp_path)
     
-    # Run text extraction pipeline
-    fields = pipeline_two.run(card_crop)
+    if image is None:
+        return err("INVALID_IMAGE", "Could not read uploaded image")
+
+    fields = pipeline_two.run(image)
+
     if not fields:
         return err("OCR_FAILED", "Unable to extract text")
-    
+
     return ok(fields)
 
 @app.post('/manual-detect-extract')
 def manual_detect_extract(file: UploadFile = File(...)):
     """Receives manually cropped image and extracts text"""
     
-    # Save uploaded image
-    ext = file.filename.split(".")[-1]
-    image_id = str(uuid.uuid4())  # Generates identifier so uploaded files don't get overwritten
-    crop_path = f"{CROP_DIR}/{image_id}_crop.jpg"
-    
-    with open(crop_path, "wb") as f:
-        f.write(file.file.read())
-        
-    image = cv2.imread(crop_path)
+    image_bytes = file.file.read()
+    np_arr = np.frombuffer(image_bytes, np.uint8)
+    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     
     if image is None:
         return err("INVALID_IMAGE", "Unable to read image")
@@ -111,15 +136,15 @@ def manual_detect_extract(file: UploadFile = File(...)):
     if not fields:
         return err("OCR_FAILED", "Unable to extract text")
     
-    return ok({
-        "crop_path": crop_path,
-        "fields": fields
-    })
+    return ok({"fields": fields})
 
 # Endpoint handles upload + detection
 @app.post('/detect-card')
-def detect_card(file: UploadFile = File(...)):
+def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
     """Receives an image and detects card in it"""
+    
+    if image_type is None or image_type not in ["front", "back"]:
+        return err("INVALID_INPUT", "Image type must be 'front' or 'back'")
 
     # Save uploaded image
     ext = file.filename.split(".")[-1]
@@ -135,28 +160,81 @@ def detect_card(file: UploadFile = File(...)):
     if results is None:
         return err("NO_CARD_DETECTED", "No card detected in image")
     
-    # Save cropped card image
-    crop_path = f"{CROP_DIR}/{image_id}_crop.jpg"
-    cv2.imwrite(crop_path, results["card_crop"])
-    
-    return {
-        "image_path": image_path,
-        "crop_path": crop_path,
-        "bbox": results["bbox"]
-    }
+    s3_key = f"cards/{image_id}/{image_type}.{ext}"
+    upload_image(image_path, s3_key)
+
+    return ok({
+        "s3_key": s3_key,
+        "bbox": results["bbox"],
+        "image_type": image_type
+    })
     
 @app.post('/price-card')
 def price_card(req: PriceCardRequest):
     """Prices a card based on its details"""
     
-    result = price_card(req.dict())
+    pricing_input = {
+        "name": req.name,
+        "card_series": req.card_series,
+        "card_number": req.card_number
+    }
+    result = run_pricing(pricing_input)
     pricing = result.get("pricing")
     
     if not pricing:
         return err("PRICING_NO_DATA", "Unable to price card with given details")
     
+    db = SessionLocal()
+    
+    price = CardPrice(
+        card_id=req.card_id,
+        estimate=pricing["estimate"],
+        low=pricing["low"],
+        high=pricing["high"],
+        num_sales=pricing["num_sales"]
+    )
+    
+    db.add(price)
+    db.commit()
+    
+    db.close()
+    
     return ok({pricing})
 
+# Read endpoints
+@app.get("/card/{card_id}")
+def get_card(card_id: str):
+    """Fetches card details by ID (PK)"""
+    
+    db = SessionLocal()
+    card = db.query(Card).get(card_id)
+    
+    db.close()
+    return ok({
+        "id": card.id,
+        "name": card.name,
+        "card_series": card.card_series,
+        "card_number": card.card_number,
+        "team_name": card.team_name,
+        "card_type": card.card_type
+    }) if card else err("INVALID_INPUT", "Not found")
+
+@app.get("/card/{card_id}/prices")
+def get_prices(card_id: str):
+    """Fetches card pricing details by Card ID (FK)"""
+    
+    db = SessionLocal()
+    prices = db.query(CardPrice).filter(CardPrice.card_id == card_id).all()
+    
+    db.close()
+    return ok([{
+        "id": p.id,
+        "estimate": p.estimate,
+        "low": p.low,
+        "high": p.high,
+        "num_sales": p.num_sales
+    } for p in prices]) if prices else err("NOT_FOUND", "No prices found")
+    
 """
 # Upload endpoint only; no cropping
 @app.post('/upload-image')
