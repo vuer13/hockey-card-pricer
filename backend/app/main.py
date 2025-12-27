@@ -180,18 +180,18 @@ def price_card(req: PriceCardRequest):
     }
     pricing = run_pricing(pricing_input)
     
-    if pricing["error"]:
+    if "price_estimate" not in pricing:
         return err("PRICING_NO_DATA", "Unable to price card with given details")
     
     db = SessionLocal()
     
     price = CardPrice(
-        card_id=req.card_id,
+        card_info_id=req.card_id,
         estimate=pricing["estimate"],
         low=pricing["low"],
         high=pricing["high"],
         num_sales=pricing["num_sales"],
-        confience=pricing["confidence"]
+        confidence=pricing["confidence"]
     )
     
     db.add(price)

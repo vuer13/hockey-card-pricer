@@ -152,6 +152,10 @@ def estimate_price(prices):
 
 def compute_confidence(stats):
     """Computes a confidence score of sales data"""
+    # Low reliability if few sales or wide price spread
+    
+    if not stats:
+        return {"query": query, "error": "Insufficient data"}
     
     n = stats["num_sales"]
     median = stats["estimate"]
@@ -183,7 +187,7 @@ def price_card(fields):
 
     return {
         "query": query,
-        "price_estimate": stats["price_estimate"],
+        "estimate": stats["estimate"],
         "price_low": stats["price_low"],
         "price_high": stats["price_high"],
         "confidence": confidence,
