@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "hockey_card_pricer",
+    "slug": "hockey_card_pricer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "cards",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
