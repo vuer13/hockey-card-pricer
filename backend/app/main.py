@@ -270,7 +270,7 @@ def read_cards(q: str = None, db: Session = Depends(get_db)):
             "image": f"{base_url}{s3_key}" if s3_key else None
         })
         
-    return ok{formatted_cards}
+    return ok(formatted_cards)
     
 """
 # Upload endpoint only; no cropping
