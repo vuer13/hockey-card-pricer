@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from .models import Card, CardImage
+from .model import Card, CardImage
 
 def get_cards(db: Session, search_query: str = None, limit = 100):
     """Gets cards and front images from the database"""
@@ -9,7 +9,7 @@ def get_cards(db: Session, search_query: str = None, limit = 100):
     query = db.query(Card, CardImage.s3_key).join(CardImage, Card.id == CardImage.card_info_id)
     
     # Filters front images only
-    query = query.filter(CardImage.is_front == True)
+    query = query.filter(CardImage.image_type == "front")
     
     # Selects all cards if no search query is provided
     if search_query:

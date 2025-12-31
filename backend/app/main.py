@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Depends
 from pydantic import BaseModel
 import numpy as np
 import os
@@ -15,8 +15,9 @@ from utils.s3_images import upload_image
 
 from sqlalchemy.orm import Session
 from db.database import SessionLocal
-from db.models import Card, CardImage, CardPrice
+from db.model import Card, CardImage, CardPrice
 from db.db_get import get_cards
+from db.init_db import init_db
 
 load_dotenv()
 
@@ -25,6 +26,8 @@ AWS_REGION = os.getenv("AWS_REGION")
 S3_BUCKET = os.getenv("S3_BUCKET")
 
 app = FastAPI()
+
+init_db()
 
 # TODO: Use AWS Storage instead of local; host models on S3
 
@@ -272,27 +275,6 @@ def read_cards(q: str = None, db: Session = Depends(get_db)):
         })
         
     return ok(formatted_cards)
-    
-"""
-# Upload endpoint only; no cropping
-@app.post('/upload-image')
-def upload_image(file: UploadFile = File(...)):
-    """Receives an image and saves it"""
-
-    # Generate filename
-    ext = file.filename.split(".")[-1]
-    image_id = str(uuid.uuid4())
-    image_path = os.path.join(UPLOAD_DIR, f"{image_id}.{ext}")
-
-    # Save file to disk
-    with open(filepath, "wb") as f:
-        f.write(file.file.read())
-
-    return {
-        "image_id": image_id,
-        "image_path": image_path
-    }
-"""
 
 # To ensure API is working
 @app.get("/health-check")
