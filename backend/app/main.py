@@ -4,6 +4,7 @@ import numpy as np
 import os
 import uuid
 import cv2
+from dotenv import load_dotenv
 
 from scripts.card_detection import CardDetectionPipeline
 from scripts.text_detection import TextExtraction
@@ -12,8 +13,15 @@ from scripts.helpers import load_models
 
 from utils.s3_images import upload_image
 
+from sqlalchemy.orm import Session
 from db.database import SessionLocal
 from db.models import Card, CardImage, CardPrice
+
+load_dotenv()
+
+# AWS Credentials from .env variables
+AWS_REGION = os.getenv("AWS_REGION")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET")
 
 app = FastAPI()
 
@@ -58,6 +66,14 @@ def err(code, message):
         "error": {"code": code, "message": message}
     }
     
+# Helper to get DB session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 @app.post("/confirm-card")
 def confirm_card(req: ConfirmCardRequest):
     """Endpoint to confirm card details and store in DB"""
@@ -234,6 +250,27 @@ def get_prices(card_id: str):
         "high": p.high,
         "num_sales": p.num_sales
     } for p in prices]) if prices else err("NOT_FOUND", "No prices found")
+    
+@app.get("/cards")
+def read_cards(q: str = None, db: Session = Depends(get_db)):
+    results = get_cards(db, q)
+
+    formatted_cards = []
+    
+    base_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/"
+    
+    for card, s3_key in results:
+        formatted_cards.append({
+            "id": str(card.id),
+            "name": card.name,
+            "card_series": card.card_series,
+            "card_number": card.card_number,
+            "team_name": card.team_name,
+            "card_type": card.card_type,
+            "image": f"{base_url}{s3_key}" if s3_key else None
+        })
+        
+    return ok{formatted_cards}
     
 """
 # Upload endpoint only; no cropping
