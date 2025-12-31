@@ -16,6 +16,7 @@ from utils.s3_images import upload_image
 from sqlalchemy.orm import Session
 from db.database import SessionLocal
 from db.models import Card, CardImage, CardPrice
+from db.db_get import get_cards
 
 load_dotenv()
 
