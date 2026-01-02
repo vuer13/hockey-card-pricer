@@ -29,7 +29,7 @@ export default function capture() {
             return;
         }
 
-        setIsSnapping(true);
+        setIsSnapping(true); // To prevent double takes of a photo
 
         try {
             const photoData = await ref.current.takePictureAsync();
