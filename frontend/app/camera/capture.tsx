@@ -13,7 +13,7 @@ export default function capture() {
     if (!permission.granted) {
         return (
             <View style={styles.container}>
-                <Text style={styles.message}>Permission needed to use camera</Text>
+                <Text style={styles.message}>Camera permission required</Text>
                 <Button onPress={requestPermission} title="grant permission" />
             </View>
         );
