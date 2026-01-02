@@ -12,8 +12,8 @@ export default function capture() {
 
     if (!permission.granted) {
         return (
-            <View style={styles.container}>
-                <Text style={styles.message}>Camera permission required</Text>
+            <View className='flex-1 justify-center bg-black'>
+                <Text className='text-center pb-2.5'>Camera permission required</Text>
                 <Button onPress={requestPermission} title="grant permission" />
             </View>
         );
@@ -24,44 +24,13 @@ export default function capture() {
     }
 
     return (
-        <View style={styles.container}>
-            <CameraView style={styles.camera} facing={facing} />
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-                    <Text style={styles.text}>Flip Camera</Text>
+        <View className='flex-1 justify-center bg-black'>
+            <CameraView className='flex-1' facing={facing} />
+            <View className='absolute bottom-16 flex-row w-full px-16 bg-transparent'>
+                <TouchableOpacity className='flex-1 items-center' onPress={toggleCameraFacing}>
+                    <Text className='text-2xl font-bold text-white'>Flip Camera</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    message: {
-        textAlign: 'center',
-        paddingBottom: 10,
-    },
-    camera: {
-        flex: 1,
-    },
-    buttonContainer: {
-        position: 'absolute',
-        bottom: 64,
-        flexDirection: 'row',
-        backgroundColor: 'transparent',
-        width: '100%',
-        paddingHorizontal: 64,
-    },
-    button: {
-        flex: 1,
-        alignItems: 'center',
-    },
-    text: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-});
