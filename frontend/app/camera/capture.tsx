@@ -74,6 +74,16 @@ export default function capture() {
     return (
         <View className='flex-1 justify-center bg-black'>
             <CameraView style={{ flex: 1 }} facing={facing} ref={ref} />
+
+            {/* Overlay Guide */}
+            <View className="absolute inset-0 flex-1 justify-center items-center z-10 mb-48">
+                <Text className="text-[#B51D66] font-bold bg-black/40 px-3 py-1 rounded overflow-hidden">
+                    Align Card Here
+                </Text>
+                <View className="w-72 h-96 border-2 border-white/70 rounded-lg bg-transparent justify-between items-center py-4" style={{ borderColor: '#B51D66' }} />
+            </View>
+
+            {/* Camera Controls */}
             <View className='absolute bottom-16 flex-row w-full px-16 bg-transparent'>
                 <TouchableOpacity
                     // Go Back
