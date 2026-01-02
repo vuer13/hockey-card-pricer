@@ -1,10 +1,14 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useRef, useState } from 'react';
+import { Button, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function capture() {
+    const router = useRouter();
     const [facing, setFacing] = useState<CameraType>('back');
     const [permission, requestPermission] = useCameraPermissions();
+    const [photo, setPhoto] = useState<string | null>(null);
+    const ref = useRef<CameraView>(null);
 
     if (!permission) {
         return <View />;
@@ -14,20 +18,70 @@ export default function capture() {
         return (
             <View className='flex-1 justify-center bg-black'>
                 <Text className='text-center pb-2.5'>Camera permission required</Text>
-                <Button onPress={requestPermission} title="grant permission" />
+                <Button onPress={requestPermission} title='grant permission' />
             </View>
         );
+    }
+
+    const takePicture = async () => {
+        const photo = await ref.current?.takePictureAsync();
+
+        if (photo?.uri) {
+            setPhoto(photo?.uri || null);
+            console.log('Photo URI:', photo?.uri);
+        } else {
+            console.warn('No URI captured');
+        }
     }
 
     function toggleCameraFacing() {
         setFacing(current => (current === 'back' ? 'front' : 'back'));
     }
 
+    if (photo) {
+        <View>
+            <Image source={{ uri: photo }} className='w-64 h-96 rounded-lg mb-8' />
+            <TouchableOpacity
+                // Accept Photo
+                onPress={() => {
+                    // TODO: Logic to upload and process the photo
+                    console.log("Upload:", photo);
+                }}
+                className='bg-green-600 w-full py-4 rounded-xl items-center mb-4'
+            >
+                <Text className='text-white font-bold'>Upload & Process</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                // Retake Photo
+                onPress={() => setPhoto(null)}>
+                <Text className='text-gray-400'>Retake</Text>
+            </TouchableOpacity>
+        </View>
+    }
+
     return (
         <View className='flex-1 justify-center bg-black'>
             <CameraView className='flex-1' facing={facing} />
             <View className='absolute bottom-16 flex-row w-full px-16 bg-transparent'>
-                <TouchableOpacity className='flex-1 items-center' onPress={toggleCameraFacing}>
+                <TouchableOpacity
+                    // Go Back
+                    onPress={() => router.back()}
+                    className='mt-10 bg-black/50 self-start p-2 rounded-lg'
+                >
+                    <Text className='text-2xl font-bold text-white'>Back</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    // Change side of camera
+                    className='flex-1 items-center' onPress={toggleCameraFacing}
+                >
+                    <Text className='text-2xl font-bold text-white'>Flip Camera</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    // Take photo
+                    className='flex-1 items-center' onPress={takePicture}
+                >
                     <Text className='text-2xl font-bold text-white'>Flip Camera</Text>
                 </TouchableOpacity>
             </View>
