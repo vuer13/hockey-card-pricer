@@ -9,6 +9,7 @@ export default function capture() {
     const [permission, requestPermission] = useCameraPermissions();
     const [photo, setPhoto] = useState<string | null>(null);
     const ref = useRef<CameraView>(null);
+    const [isSnapping, setIsSnapping] = useState(false);
 
     if (!permission) {
         return <View />;
@@ -24,13 +25,22 @@ export default function capture() {
     }
 
     const takePicture = async () => {
-        const photo = await ref.current?.takePictureAsync();
+        if (isSnapping || !ref.current) {
+            return;
+        }
 
-        if (photo?.uri) {
-            setPhoto(photo?.uri || null);
-            console.log('Photo URI:', photo?.uri);
-        } else {
-            console.warn('No URI captured');
+        setIsSnapping(true);
+
+        try {
+            const photoData = await ref.current.takePictureAsync();
+
+            if (photoData?.uri) {
+                setPhoto(photoData.uri);
+            }
+        } catch (error) {
+            console.error("Failed to take picture:", error);
+        } finally {
+            setIsSnapping(false);
         }
     }
 
@@ -39,29 +49,31 @@ export default function capture() {
     }
 
     if (photo) {
-        <View>
-            <Image source={{ uri: photo }} className='w-64 h-96 rounded-lg mb-8' />
-            <TouchableOpacity
-                // Accept Photo
-                onPress={() => {
-                    // TODO: Logic to upload and process the photo
-                    console.log("Upload:", photo);
-                }}
-                className='bg-green-600 w-full py-4 rounded-xl items-center mb-4'
-            >
-                <Text className='text-white font-bold'>Upload & Process</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                // Retake Photo
-                onPress={() => setPhoto(null)}>
-                <Text className='text-gray-400'>Retake</Text>
-            </TouchableOpacity>
-        </View>
+        return (
+            <View>
+                <Image source={{ uri: photo }} className='w-64 h-96 rounded-lg mb-8' />
+                <TouchableOpacity
+                    // Accept Photo
+                    onPress={() => {
+                        // TODO: Logic to upload and process the photo
+                        console.log("Upload:", photo);
+                    }}
+                    className='bg-green-600 w-full py-4 rounded-xl items-center mb-4'
+                >
+                    <Text className='text-white font-bold'>Upload & Process</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    // Retake Photo
+                    onPress={() => setPhoto(null)}>
+                    <Text className='text-gray-400'>Retake</Text>
+                </TouchableOpacity>
+            </View>
+        );
     }
 
     return (
         <View className='flex-1 justify-center bg-black'>
-            <CameraView className='flex-1' facing={facing} />
+            <CameraView style={{ flex: 1 }} facing={facing} ref={ref} />
             <View className='absolute bottom-16 flex-row w-full px-16 bg-transparent'>
                 <TouchableOpacity
                     // Go Back
@@ -82,7 +94,7 @@ export default function capture() {
                     // Take photo
                     className='flex-1 items-center' onPress={takePicture}
                 >
-                    <Text className='text-2xl font-bold text-white'>Flip Camera</Text>
+                    <Text className='text-2xl font-bold text-white'>Take Picture</Text>
                 </TouchableOpacity>
             </View>
         </View>

@@ -8,10 +8,6 @@ const _layout = () => {
                 name="capture"
                 options={{ headerShown: false, }}
             />
-            <Stack.Screen
-                name="info"
-                options={{ headerShown: false, }}
-            />
         </Stack>
     )
 }
