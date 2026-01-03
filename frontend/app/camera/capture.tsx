@@ -1,17 +1,20 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Button, Image, Platform, Text, TouchableOpacity, View } from 'react-native';
 
 export default function capture() {
     const router = useRouter();
+    const params = useLocalSearchParams();
+
     const [facing, setFacing] = useState<CameraType>('back');
     const [permission, requestPermission] = useCameraPermissions();
     const [photo, setPhoto] = useState<string | null>(null);
     const ref = useRef<CameraView>(null);
     const [isSnapping, setIsSnapping] = useState(false);
-
     const [isUploading, setIsUploading] = useState(false);
+
+    const side = (params.side as string)
 
     if (!permission) {
         return <View />;
@@ -63,7 +66,7 @@ export default function capture() {
                 type: 'image/jpeg',
             } as any);
 
-            formData.append('image_type', 'front'); // Place holder for now
+            formData.append('image_type', side);
 
             const API_URL = process.env.API_BASE_HOME;
 
@@ -91,7 +94,8 @@ export default function capture() {
                     params: {
                         photoUri: photo,
                         bbox: JSON.stringify(json.data.bbox),
-                        s3Key: json.data.s3_key
+                        s3Key: json.data.s3_key,
+                        side: side
                     }
                 });
             } else {
