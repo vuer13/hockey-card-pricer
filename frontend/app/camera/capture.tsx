@@ -1,7 +1,7 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Button, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Button, Image, Platform, Text, TouchableOpacity, View } from 'react-native';
 
 export default function capture() {
     const router = useRouter();
@@ -10,6 +10,8 @@ export default function capture() {
     const [photo, setPhoto] = useState<string | null>(null);
     const ref = useRef<CameraView>(null);
     const [isSnapping, setIsSnapping] = useState(false);
+
+    const [isUploading, setIsUploading] = useState(false);
 
     if (!permission) {
         return <View />;
@@ -44,9 +46,69 @@ export default function capture() {
         }
     }
 
+    const uploadImage = async () => {
+        if (!photo) {
+            return;
+        }
+
+        setIsUploading(true);
+
+        try {
+            const formData = new FormData();  // Sends files to server
+
+            // Append the photo to the form data
+            formData.append('file', {
+                uri: Platform.OS === 'android' ? photo : photo.replace('file://', ''),
+                name: 'card_capture.jpg',
+                type: 'image/jpeg',
+            } as any);
+
+            formData.append('image_type', 'front'); // Place holder for now
+
+            const API_URL = process.env.API_BASE_HOME;
+
+            if (!API_URL) {
+                console.error("Missing API URL in .env");
+                return;
+            }
+
+            // Expect a multipart file upload.
+            const response = await fetch(`${API_URL}/detect-card`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            // Parse JSON coming back from backend
+            const json = await response.json();
+
+            if (json.status === 'ok') {
+                console.log("Card Detected:", json.data.bbox);
+                router.push({
+                    pathname: "/camera/confirm",
+                    params: {
+                        photoUri: photo,
+                        bbox: JSON.stringify(json.data.bbox),
+                        s3Key: json.data.s3_key
+                    }
+                });
+            } else {
+                Alert.alert("Detection Failed", "Could not find a card. Please try manually cropping.");
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Upload Error", "Could not connect to server.");
+        } finally {
+            setIsUploading(false);
+        }
+    }
+
     function toggleCameraFacing() {
         setFacing(current => (current === 'back' ? 'front' : 'back'));
     }
+
 
     if (photo) {
         return (
@@ -55,18 +117,28 @@ export default function capture() {
                 <TouchableOpacity
                     // Accept Photo
                     onPress={() => {
-                        // TODO: Logic to upload and process the photo
+                        uploadImage();
                         console.log("Upload:", photo);
                     }}
+                    disabled={isUploading}
                     className='bg-green-600 w-full py-4 rounded-xl items-center mb-4'
                 >
+                    {isUploading ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Text className='text-white font-bold text-lg'>
+                            Uploading Card
+                        </Text>
+                    )}
                     <Text className='text-white font-bold'>Upload & Process</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    // Retake Photo
-                    onPress={() => setPhoto(null)}>
-                    <Text className='text-gray-400'>Retake</Text>
-                </TouchableOpacity>
+
+                {/* Only show Retake if no uploading */}
+                {!isUploading && (
+                    <TouchableOpacity onPress={() => setPhoto(null)}>
+                        <Text className='text-gray-400 text-lg'>Retake Photo</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         );
     }
