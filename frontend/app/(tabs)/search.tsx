@@ -1,6 +1,6 @@
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
-import { Image, ScrollView, View, Text, ActivityIndicator, FlatList } from "react-native";
+import { Image, View, Text, ActivityIndicator, FlatList } from "react-native";
 import SearchBar from "@/components/SearchBar";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
