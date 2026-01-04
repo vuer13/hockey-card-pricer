@@ -1,4 +1,4 @@
-import { View, Text, Alert, TouchableOpacity, Image } from 'react-native'
+import { View, Text, Alert, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -129,26 +129,32 @@ const staging = () => {
     );
 
     return (
-        <SafeAreaView>
-            <Text className="text-white text-2xl font-bold text-center mb-2">New Entry</Text>
+        <View className="flex-1 bg-gray-900 rounded-xl mb-6 justify-center overflow-hidden border border-gray-800">
+            {loading ? (
+                <ActivityIndicator size="large" color="white" />
+            ) : (
+                <SafeAreaView>
+                    <Text className="text-white text-2xl font-bold text-center mb-2">New Entry</Text>
 
-            <View className="flex-row h-64 mb-8">
-                <CardSlot side="front" data={frontImage} />
-                <CardSlot side="back" data={backImage} />
-            </View>
+                    <View className="flex-row h-64 mb-8">
+                        <CardSlot side="front" data={frontImage} />
+                        <CardSlot side="back" data={backImage} />
+                    </View>
 
-            <TouchableOpacity
-                onPress={handleFinalize}
-                className={`w-full py-4 rounded-xl items-center ${(frontImage && backImage) ? 'bg-blue-600' : 'bg-gray-800'
-                    }`}
-                disabled={!frontImage || !backImage}
-            >
-                <Text className={`text-lg font-bold ${(frontImage && backImage) ? 'text-white' : 'text-gray-500'
-                    }`}>
-                    Extract Information
-                </Text>
-            </TouchableOpacity>
-        </SafeAreaView>
+                    <TouchableOpacity
+                        onPress={handleFinalize}
+                        className={`w-full py-4 rounded-xl items-center ${(frontImage && backImage) ? 'bg-blue-600' : 'bg-gray-800'
+                            }`}
+                        disabled={!frontImage || !backImage}
+                    >
+                        <Text className={`text-lg font-bold ${(frontImage && backImage) ? 'text-white' : 'text-gray-500'
+                            }`}>
+                            Extract Information
+                        </Text>
+                    </TouchableOpacity>
+                </SafeAreaView>
+            )}
+        </View>
     )
 }
 
