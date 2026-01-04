@@ -10,6 +10,8 @@ const staging = () => {
     const [frontImage, setFrontImage] = useState<{ uri: string, s3Key: string } | null>(null);
     const [backImage, setBackImage] = useState<{ uri: string, s3Key: string } | null>(null);
 
+    const [loading, setLoading] = useState(false);
+
     // Listener checking to see if new information as been added
     useEffect(() => {
         if (params?.capturedUri && params?.side && params?.s3Key) {
@@ -43,13 +45,68 @@ const staging = () => {
 
         console.log("Ready to Extract. Front Key:", frontImage.s3Key, "Back Key:", backImage.s3Key);
 
-        // TODO: Navigate to the extraction/pricing screen
+        setLoading(true);
+        extractTextFromImage();
     };
+
+    const extractTextFromImage = async () => {
+        try {
+            const formData = new FormData();
+
+            formData.append('file', {
+                uri: backImage?.uri,
+                name: 'backImage.jpg',
+                type: 'image/jpeg'
+            } as any);
+
+            const API_URL = process.env.API_BASE_HOME;
+
+            const response = await fetch(`${API_URL}/extract-text`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            const json = await response.json();
+            console.log('Extraction Result:', json);
+
+            if (json.status === 'ok') {
+                router.push({
+                    pathname: '/camera/verify_text',
+                    params: {
+                        name: json.data.name,
+                        card_number: json.data.card_number,
+                        card_series: json.data.card_series,
+                        card_type: json.data.card_type,
+                        team_name: json.data.team_name,
+                        frontImage: frontImage?.s3Key,
+                        backImage: backImage?.s3Key
+                    }
+                });
+            } else {
+                router.push({
+                    pathname: '/camera/verify_text',
+                    params: {
+                        frontImage: frontImage?.s3Key,
+                        backImage: backImage?.s3Key
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error extracting text:', error);
+            Alert.alert("Extraction Error", "There was an error extracting text from the images.");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     // Since front/back logic is the same in these steps
     const CardSlot = ({ side, data }: { side: 'front' | 'back', data: any }) => (
         <TouchableOpacity
             onPress={() => handleScan(side)} // Start process of getting photo
+            className="flex-1 bg-gray-900 rounded-xl border-2 border-dashed border-gray-600 justify-center items-center overflow-hidden m-2"
         >
             {data ? (
                 <>
