@@ -7,6 +7,8 @@ const confirm = () => {
     const params = useLocalSearchParams(); // To get previous information from capture
 
     const [currentUri, setCurrentUri] = useState(params.photoUri as string); // Current uri
+    const [loading, setLoading] = useState(false); // Loading state
+
     const { s3Key, side } = params; // where the image is stored and which side
 
     const handleConfirm = () => {
@@ -22,7 +24,15 @@ const confirm = () => {
     };
 
     const handleManualCrop = async (result: any) => {
-        // TODO: Implement manual cropping logic here
+        try {
+            setLoading(true);
+            // Continue logic
+        } catch (error) {
+            console.log(error);
+            Alert.alert("Error", "Could not open crop editor.");
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
