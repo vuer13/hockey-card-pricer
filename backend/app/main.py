@@ -140,24 +140,6 @@ def extract_text(file: UploadFile = File(...)):
 
     return ok(fields)
 
-@app.post('/manual-detect-extract')
-def manual_detect_extract(file: UploadFile = File(...)):
-    """Receives manually cropped image and extracts text"""
-    
-    image_bytes = file.file.read()
-    np_arr = np.frombuffer(image_bytes, np.uint8)
-    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-    
-    if image is None:
-        return err("INVALID_IMAGE", "Unable to read image")
-    
-    fields = pipeline_two.run(image)
-    
-    if not fields:
-        return err("OCR_FAILED", "Unable to extract text")
-    
-    return ok({"fields": fields})
-
 # Endpoint handles upload + detection
 @app.post('/detect-card')
 def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
