@@ -1,0 +1,91 @@
+import { icons } from "@/constants/icons";
+import { images } from "@/constants/images";
+import { Image, View, Text, ActivityIndicator, FlatList } from "react-native";
+import SearchBar from "@/components/SearchBar";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+
+const API_BASE = process.env.API_BASE_HOME;
+
+interface Card {
+    id: string;
+    name: string;
+    card_series: string;
+    card_number: string;
+    team_name: string;
+    card_type: string;
+    image: string;
+}
+
+const CardItem = ({ item }: { item: Card }) => (
+    <View className="w-full mb-6 bg-dark-100 rounded-2xl overflow-hidden shadow-lg border border-white/10">
+        <Image
+            source={{ uri: item.image }}
+            className="w-full h-80"
+            resizeMode="cover"
+        />
+        <View className="p-4">
+            <View className="flex-row justify-between items-center">
+                <Text className="text-white font-bold text-xl">{item.name}</Text>
+            </View>
+            <Text className="text-gray-400 text-sm mt-1">
+                {item.card_series} #{item.card_number}
+            </Text>
+        </View>
+    </View>
+)
+
+export default function Index() {
+    const router = useRouter();
+    const [cards, setCards] = useState<Card[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchCards();
+    }, []);
+
+    const fetchCards = async () => {
+        try {
+            const response = await fetch(`${API_BASE}/cards`);
+            const data = await response.json();
+            console.log("RAW RESPONSE:", data);
+            if (response.ok) {
+                setCards(data.cards);
+            }
+        } catch (error) {
+            console.error('Error fetching cards:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <View className="flex-1 bg-primary">
+            <Image source={images.bg} className="absolute w-full z-0" />
+
+            {loading ? (
+                <View className="flex-1 justify-center items-center">
+                    <ActivityIndicator size="large" color="#ffffff" />
+                </View>
+            ) : (
+                <FlatList
+                    data={cards}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => <CardItem item={item} />}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+                    showsVerticalScrollIndicator={false}
+                    ListHeaderComponent={() => (
+                        <View className="mb-6">
+                            <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto" />
+                            <SearchBar
+                                onPress={() => router.push('/search')}
+                                placeholder="Search for cards"
+                            />
+                            <Text className="text-white text-2xl font-bold mt-8">Your Latest Cards</Text>
+                        </View>
+                    )}
+                />
+            )}
+        </View>
+    );
+}

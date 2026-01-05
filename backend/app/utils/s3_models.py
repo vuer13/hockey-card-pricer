@@ -4,10 +4,10 @@ import os
 def download_model(s3_key, path):
     """Downloads a model file from S3 to the specified local path."""
     
-    bucket = os.getenv("S3_BUCKET")
+    bucket_name = os.getenv("S3_BUCKET")
     region = os.getenv("AWS_REGION")
     
-    if not bucket:
+    if not bucket_name:
         raise ValueError("S3_BUCKET_NAME environment variable is not set.")
     
     os.makedirs(os.path.dirname(path), exist_ok=True)

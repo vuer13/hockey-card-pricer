@@ -1,9 +1,10 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Depends
 from pydantic import BaseModel
 import numpy as np
 import os
 import uuid
 import cv2
+from dotenv import load_dotenv
 
 from scripts.card_detection import CardDetectionPipeline
 from scripts.text_detection import TextExtraction
@@ -12,10 +13,21 @@ from scripts.helpers import load_models
 
 from utils.s3_images import upload_image
 
+from sqlalchemy.orm import Session
 from db.database import SessionLocal
-from db.models import Card, CardImage, CardPrice
+from db.model import Card, CardImage, CardPrice
+from db.db_get import get_cards
+from db.init_db import init_db
+
+load_dotenv()
+
+# AWS Credentials from .env variables
+AWS_REGION = os.getenv("AWS_REGION")
+S3_BUCKET = os.getenv("S3_BUCKET")
 
 app = FastAPI()
+
+init_db()
 
 # TODO: Use AWS Storage instead of local; host models on S3
 
@@ -38,8 +50,8 @@ class ConfirmCardRequest(BaseModel):
     card_number: str
     team_name: str | None = None
     card_type: str | None = "Base"
-    image_type: str
-    s3_key: str
+    front_image_key: str
+    back_image_key: str
     
 class PriceCardRequest(BaseModel):
     card_id: str
@@ -58,6 +70,14 @@ def err(code, message):
         "error": {"code": code, "message": message}
     }
     
+# Helper to get DB session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 @app.post("/confirm-card")
 def confirm_card(req: ConfirmCardRequest):
     """Endpoint to confirm card details and store in DB"""
@@ -67,32 +87,47 @@ def confirm_card(req: ConfirmCardRequest):
     
     db = SessionLocal()
     
-    # Card Information
-    card = Card(
-        name=req.name,
-        card_series=req.card_series,
-        card_number=req.card_number,
-        team_name=req.team_name,
-        card_type=req.card_type if req.card_type else "Base"
-    )
-    
-    # Adding Card to DB
-    db.add(card)
-    db.commit()
-    db.refresh(card)
-    
-    image = CardImage(
-        card_id=card.id,
-        image_type=req.image_type,
-        s3_key=req.s3_key
-    )
-    
-    db.add(image)
-    db.commit()
-    
-    db.close()
+    try:
+        # Card Information
+        card = Card(
+            name=req.name,
+            card_series=req.card_series,
+            card_number=req.card_number,
+            team_name=req.team_name,
+            card_type=req.card_type if req.card_type else "Base"
+        )
+        
+        # Adding Card to DB
+        db.add(card)
+        db.commit()
+        db.refresh(card) # Get new ID
+        
+        # Add Front Image
+        front_image = CardImage(
+            card_id=card.id,
+            image_type="front",
+            s3_key=req.front_image_key
+        )
+        
+        db.add(front_image)
 
-    return ok({"card_id": str(card.id)})
+        # Add Back Image
+        back_image = CardImage(
+            card_id=card.id,
+            image_type="back",
+            s3_key=req.back_image_key
+        )
+        
+        db.add(back_image)
+        db.commit()
+        
+        return ok({"card_id": str(card.id)})
+    
+    except Exception as e:
+        db.rollback()
+        return err("DB_ERROR", str(e))
+    finally:
+        db.close()
 
 
 @app.post("/extract-text")
@@ -119,24 +154,6 @@ def extract_text(file: UploadFile = File(...)):
         return err("OCR_FAILED", "Unable to extract text")
 
     return ok(fields)
-
-@app.post('/manual-detect-extract')
-def manual_detect_extract(file: UploadFile = File(...)):
-    """Receives manually cropped image and extracts text"""
-    
-    image_bytes = file.file.read()
-    np_arr = np.frombuffer(image_bytes, np.uint8)
-    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-    
-    if image is None:
-        return err("INVALID_IMAGE", "Unable to read image")
-    
-    fields = pipeline_two.run(image)
-    
-    if not fields:
-        return err("OCR_FAILED", "Unable to extract text")
-    
-    return ok({"fields": fields})
 
 # Endpoint handles upload + detection
 @app.post('/detect-card')
@@ -235,26 +252,26 @@ def get_prices(card_id: str):
         "num_sales": p.num_sales
     } for p in prices]) if prices else err("NOT_FOUND", "No prices found")
     
-"""
-# Upload endpoint only; no cropping
-@app.post('/upload-image')
-def upload_image(file: UploadFile = File(...)):
-    """Receives an image and saves it"""
+@app.get("/cards")
+def read_cards(q: str = None, db: Session = Depends(get_db)):
+    results = get_cards(db, q)
 
-    # Generate filename
-    ext = file.filename.split(".")[-1]
-    image_id = str(uuid.uuid4())
-    image_path = os.path.join(UPLOAD_DIR, f"{image_id}.{ext}")
-
-    # Save file to disk
-    with open(filepath, "wb") as f:
-        f.write(file.file.read())
-
-    return {
-        "image_id": image_id,
-        "image_path": image_path
-    }
-"""
+    formatted_cards = []
+    
+    base_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/"
+    
+    for card, s3_key in results:
+        formatted_cards.append({
+            "id": str(card.id),
+            "name": card.name,
+            "card_series": card.card_series,
+            "card_number": card.card_number,
+            "team_name": card.team_name,
+            "card_type": card.card_type,
+            "image": f"{base_url}{s3_key}" if s3_key else None
+        })
+        
+    return ok(formatted_cards)
 
 # To ensure API is working
 @app.get("/health-check")
