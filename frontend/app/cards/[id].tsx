@@ -28,7 +28,16 @@ const CardDetails = () => {
 
     const fetchCardDetails = async () => {
         try {
-            // Logic to get card details from backend
+            const API_URL = process.env.API_BASE_HOME
+            const response = await fetch(`${API_URL}/cards/${id}`);
+            const json = await response.json();
+
+            if (json.status === 'ok') {
+                setCard(json.data);
+            } else {
+                Alert.alert("Error", "Card not found");
+                router.back();
+            }
         } catch (error) {
             console.error('Error fetching card details:', error);
             Alert.alert('Error', 'Failed to fetch card details.');
