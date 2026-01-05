@@ -50,8 +50,8 @@ class ConfirmCardRequest(BaseModel):
     card_number: str
     team_name: str | None = None
     card_type: str | None = "Base"
-    image_type: str
-    s3_key: str
+    front_image_key: str
+    back_image_key: str
     
 class PriceCardRequest(BaseModel):
     card_id: str
@@ -87,32 +87,47 @@ def confirm_card(req: ConfirmCardRequest):
     
     db = SessionLocal()
     
-    # Card Information
-    card = Card(
-        name=req.name,
-        card_series=req.card_series,
-        card_number=req.card_number,
-        team_name=req.team_name,
-        card_type=req.card_type if req.card_type else "Base"
-    )
-    
-    # Adding Card to DB
-    db.add(card)
-    db.commit()
-    db.refresh(card)
-    
-    image = CardImage(
-        card_id=card.id,
-        image_type=req.image_type,
-        s3_key=req.s3_key
-    )
-    
-    db.add(image)
-    db.commit()
-    
-    db.close()
+    try:
+        # Card Information
+        card = Card(
+            name=req.name,
+            card_series=req.card_series,
+            card_number=req.card_number,
+            team_name=req.team_name,
+            card_type=req.card_type if req.card_type else "Base"
+        )
+        
+        # Adding Card to DB
+        db.add(card)
+        db.commit()
+        db.refresh(card) # Get new ID
+        
+        # Add Front Image
+        front_image = CardImage(
+            card_id=card.id,
+            image_type="front",
+            s3_key=req.front_image_key
+        )
+        
+        db.add(front_image)
 
-    return ok({"card_id": str(card.id)})
+        # Add Back Image
+        back_image = CardImage(
+            card_id=card.id,
+            image_type="back",
+            s3_key=req.back_image_key
+        )
+        
+        db.add(back_image)
+        db.commit()
+        
+        return ok({"card_id": str(card.id)})
+    
+    except Exception as e:
+        db.rollback()
+        return err("DB_ERROR", str(e))
+    finally:
+        db.close()
 
 
 @app.post("/extract-text")
