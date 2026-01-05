@@ -44,7 +44,9 @@ const verify_text = () => {
             if (json.status === 'ok') {
                 Alert.alert("Success", "Card added to collection!");
 
-                // Price the cards now
+                // Navigate back to Home and reset stack
+                router.dismissAll();
+                router.replace("/");
             } else {
                 Alert.alert("Error", "Could not save card: " + json.msg);
             }
