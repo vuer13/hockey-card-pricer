@@ -1,12 +1,59 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { View, Text, Alert, ActivityIndicator } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
+type CardData = {
+    id: number;
+    name: string;
+    card_series: string;
+    card_number: string;
+    team_name?: string;
+    card_type: string;
+    front_image_key: string;
+    back_image_key: string;
+};
 
 const CardDetails = () => {
-  return (
-    <View>
-      <Text>CardDetails</Text>
-    </View>
-  )
+    const router = useRouter();
+    const { id } = useLocalSearchParams(); // Grabs id from filename 
+
+    const [card, setCard] = useState<CardData | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (id) {
+            fetchCardDetails();
+        }
+    }, [id]);
+
+    const fetchCardDetails = async () => {
+        try {
+            // Logic to get card details from backend
+        } catch (error) {
+            console.error('Error fetching card details:', error);
+            Alert.alert('Error', 'Failed to fetch card details.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <View className="flex-1 bg-black justify-center items-center">
+                <ActivityIndicator size="large" color="white" />
+            </View>
+        );
+    }
+
+    if (!card) {
+        return null;
+    }
+
+    return (
+        <View>
+            <Text>CardDetails</Text>
+        </View>
+    )
 }
 
 export default CardDetails
