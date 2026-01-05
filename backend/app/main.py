@@ -224,17 +224,30 @@ def get_card(card_id: str):
     """Fetches card details by ID (PK)"""
     
     db = SessionLocal()
-    card = db.query(Card).get(card_id)
-    
-    db.close()
-    return ok({
-        "id": card.id,
-        "name": card.name,
-        "card_series": card.card_series,
-        "card_number": card.card_number,
-        "team_name": card.team_name,
-        "card_type": card.card_type
-    }) if card else err("INVALID_INPUT", "Not found")
+    try:
+        card = db.query(Card).get(card_id)
+        
+        if not card:
+            return err("INVALID_INPUT", "Not found")    
+        
+        images = db.query(CardImage).filter(CardImage.card_id == card_id).all()
+        
+        # Organize/sort keys to get front key and back key
+        front_key = next((img.s3_key for img in images if img.image_type == "front"), None)
+        back_key = next((img.s3_key for img in images if img.image_type == "back"), None)
+        
+        return ok({
+            "id": card.id,
+            "name": card.name,
+            "card_series": card.card_series,
+            "card_number": card.card_number,
+            "team_name": card.team_name,
+            "card_type": card.card_type,
+            "front_image_key": front_key,
+            "back_image_key": back_key
+        })
+    finally:
+        db.close()
 
 @app.get("/card/{card_id}/prices")
 def get_prices(card_id: str):
