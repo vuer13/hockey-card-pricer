@@ -59,7 +59,7 @@ const staging = () => {
                 type: 'image/jpeg'
             } as any);
 
-            const API_URL = process.env.API_BASE_HOME;
+            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             const response = await fetch(`${API_URL}/extract-text`, {
                 method: 'POST',

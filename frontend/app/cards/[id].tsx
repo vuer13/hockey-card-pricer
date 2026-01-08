@@ -1,6 +1,8 @@
-import { View, Text, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, Alert, ActivityIndicator, TouchableOpacity, ScrollView, Image } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 type CardData = {
     id: number;
@@ -28,7 +30,7 @@ const CardDetails = () => {
 
     const fetchCardDetails = async () => {
         try {
-            const API_URL = process.env.API_BASE_HOME
+            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
             const response = await fetch(`${API_URL}/cards/${id}`);
             const json = await response.json();
 
@@ -58,11 +60,46 @@ const CardDetails = () => {
         return null;
     }
 
+    const S3_BUCKET = process.env.EXPO_PUBLIC_S3_BUCKET;
+    const AWS_REGION = process.env.EXPO_PUBLIC_AWS_REGION;
+    const base_url = `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/`
+
     return (
-        <View>
-            <Text>CardDetails</Text>
-        </View>
+        <SafeAreaView className="flex-1 bg-black">
+            <View className="flex-row items-center p-4 border-b border-gray-800">
+                <TouchableOpacity onPress={() => router.back()} className="mr-4">
+                    <Ionicons name="arrow-back" size={24} color="white" />
+                </TouchableOpacity>
+                <Text className="text-white text-xl font-bold">Card Details</Text>
+            </View>
+
+            <ScrollView className="p-4">
+                <View className="h-96 w-full bg-gray-900 rounded-xl mb-6 overflow-hidden border border-gray-700">
+                    <Image
+                        source={{ uri: `${base_url}${card.front_image_key}` }}
+                        className="w-full h-full"
+                        resizeMode="contain"
+                    />
+                </View>
+
+                {/* Info Section */}
+                <View className="bg-gray-900 rounded-xl p-6 gap-4">
+                    <DetailRow label="Player Name" value={card.name} />
+                    <DetailRow label="Team" value={card.team_name || 'N/A'} />
+                    <DetailRow label="Series" value={card.card_series} />
+                    <DetailRow label="Card #" value={card.card_number} />
+                    <DetailRow label="Type" value={card.card_type} />
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     )
 }
+
+const DetailRow = ({ label, value }: { label: string, value: string }) => (
+    <View className="flex-row justify-between items-center border-b border-gray-800 pb-2 mb-2">
+        <Text className="text-gray-400 text-base">{label}</Text>
+        <Text className="text-white text-lg font-bold">{value}</Text>
+    </View>
+);
 
 export default CardDetails

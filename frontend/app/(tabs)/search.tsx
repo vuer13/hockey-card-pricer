@@ -5,7 +5,7 @@ import SearchBar from "@/components/SearchBar";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
-const API_BASE = process.env.API_BASE_HOME;
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
 interface Card {
     id: string;

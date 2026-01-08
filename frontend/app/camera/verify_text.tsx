@@ -28,7 +28,7 @@ const verify_text = () => {
                 back_image_key: params.backImage   
             };
 
-            const API_URL = process.env.API_BASE_HOME;
+            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // POST request to confirm card details
             const response = await fetch(`${API_URL}/confirm-card`, {
