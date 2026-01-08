@@ -1,8 +1,7 @@
 import { View, Text, Alert, Image, TouchableOpacity, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import * as ImagePicker from 'expo-image-picker';
+npx expo install expo-image-manipulatorimport * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 
 const confirm = () => {
@@ -37,9 +36,12 @@ const confirm = () => {
                 { compress: 1, format: SaveFormat.JPEG }
             );
 
+            console.log("Auto-cropping successful:", result.uri);
+
             setDisplayedUri(result.uri);
         } catch (error) {
             setDisplayedUri(currentUri); // Fallback to original
+            console.log("Auto-cropping failed, showing original image.", error);
         } finally {
             setLoading(false);
         }

@@ -50,7 +50,7 @@ const verify_text = () => {
                 router.dismissAll();
                 router.replace("/");
             } else {
-                Alert.alert("Error", "Could not save card: " + json.msg);
+                Alert.alert("Error", "Could not save card: " + json.err);
             }
         } catch (error) {
             console.error("Error confirming card:", error);
