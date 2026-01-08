@@ -48,6 +48,10 @@ const CardDetails = () => {
         }
     }
 
+    const handlePrice = async () => {
+        // TODO - get price card
+    };
+
     if (loading) {
         return (
             <View className="flex-1 bg-black justify-center items-center">
@@ -89,6 +93,17 @@ const CardDetails = () => {
                     <DetailRow label="Series" value={card.card_series} />
                     <DetailRow label="Card #" value={card.card_number} />
                     <DetailRow label="Type" value={card.card_type} />
+                </View>
+
+                <View className="absolute bottom-10 left-0 right-0 p-4">
+                    <TouchableOpacity
+                        onPress={handlePrice}
+                        className="bg-green-600 w-full py-4 rounded-xl items-center shadow-lg"
+                    >
+                        <Text className="text-white font-bold text-lg">
+                            Get eBay Price
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </SafeAreaView>
