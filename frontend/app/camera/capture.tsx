@@ -7,7 +7,7 @@ export default function capture() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
-    const side = (params.side as string)
+    const { side, existingFrontUri, existingFrontKey, existingBackUri, existingBackKey } = useLocalSearchParams();
     const [status, setStatus] = useState("Initialization")
 
     // Runs when component loads
@@ -59,18 +59,20 @@ export default function capture() {
                 type: 'image/jpeg'
             } as any);
 
+            console.log("Detecting side:", side);
+
+            formData.append('image_type', side as string);
+
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // Send to backend
             const response = await fetch(`${API_URL}/detect-card`, {
                 method: 'POST',
-                body: formData,
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                body: formData
             });
 
             const json = await response.json();
+            console.log("Detection response:", json);
 
             // Verification
             if (json.status === 'ok') {
@@ -80,17 +82,24 @@ export default function capture() {
                         originalUri: uri,
                         bbox: JSON.stringify(json.bbox),
                         s3Key: json.data.s3_key,
-                        side: side
+                        side: side,
+                        existingFrontUri,
+                        existingFrontKey,
+                        existingBackUri,
+                        existingBackKey
                     }
                 });
             } else {
-                // Incase backend cannot find card or an error is present, then we need to manually upload
                 router.push({
                     pathname: '/camera/confirm',
                     params: {
                         originalUri: uri,
                         s3Key: "manual_upload",
-                        side: side
+                        side: side,
+                        existingFrontUri,
+                        existingFrontKey,
+                        existingBackUri,
+                        existingBackKey
                     }
                 });
             }

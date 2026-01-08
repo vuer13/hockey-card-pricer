@@ -7,12 +7,12 @@ import * as MediaLibrary from 'expo-media-library';
 
 const confirm = () => {
     const router = useRouter();
-    const params = useLocalSearchParams(); // To get previous information from capture
+    const params = useLocalSearchParams(); // To get information
 
     // Previous params from capture
     const currentUri = params.originalUri as string; // Current uri
     const bbox = params.bbox ? JSON.parse(params.bbox as string) : null; // Bounding box for cropping
-    const { s3Key, side } = params; // where the image is stored and which side
+    const { s3Key, side, existingFrontUri, existingFrontKey, existingBackUri, existingBackKey } = params; // where the image is stored and which side
 
     const [displayedUri, setDisplayedUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -83,13 +83,16 @@ const confirm = () => {
     };
 
     const handleConfirm = () => {
-        // Send the final URI back to Staging
+        const isFront = side === 'front';
+
         router.push({
             pathname: "/camera/staging",
             params: {
-                capturedUri: displayedUri,
-                s3Key: s3Key,
-                side: side
+                finalFrontUri: isFront ? displayedUri : existingFrontUri,
+                finalFrontKey: isFront ? s3Key : existingFrontKey,
+
+                finalBackUri: isFront ? existingBackUri : displayedUri,
+                finalBackKey: isFront ? existingBackKey : s3Key,
             }
         });
     };
