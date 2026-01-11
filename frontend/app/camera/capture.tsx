@@ -76,12 +76,14 @@ export default function capture() {
 
             // Verification
             if (json.status === 'ok') {
+                console.log("Card detected successfully. Confirming Now.");
                 router.push({
                     pathname: '/camera/confirm',
                     params: {
                         originalUri: uri,
-                        bbox: JSON.stringify(json.bbox),
-                        s3Key: json.data.s3_key,
+                        bbox: JSON.stringify(json.data.bbox),
+                        s3_key_original: json.data.s3_key_original,
+                        s3_key_crop: json.data.s3_key_crop,
                         side: side,
                         existingFrontUri,
                         existingFrontKey,
@@ -94,7 +96,7 @@ export default function capture() {
                     pathname: '/camera/confirm',
                     params: {
                         originalUri: uri,
-                        s3Key: "manual_upload",
+                        s3_key_original: "manual_upload",
                         side: side,
                         existingFrontUri,
                         existingFrontKey,

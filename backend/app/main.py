@@ -5,6 +5,7 @@ import os
 import uuid
 import cv2
 from dotenv import load_dotenv
+from PIL import Image, ImageOps
 
 from scripts.card_detection import CardDetectionPipeline
 from scripts.text_detection import TextExtraction
@@ -163,28 +164,62 @@ def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
     if image_type is None or image_type not in ["front", "back"]:
         return err("INVALID_INPUT", "Image type must be 'front' or 'back'")
 
-    # Save uploaded image
+    # Setup Paths
     ext = file.filename.split(".")[-1]
-    image_id = str(uuid.uuid4())  # Generates identifier so uploaded files don't get overwritten
+    image_id = str(uuid.uuid4())
     image_path = f"{UPLOAD_DIR}/{image_id}.{ext}"
-    
-    with open(image_path, "wb") as f:
-        f.write(file.file.read())
-        
-    # Run detection pipeline
-    results = pipeline_one.run(image_path)
-    
-    if results is None:
-        return err("NO_CARD_DETECTED", "No card detected in image")
-    
-    s3_key = f"cards/{image_id}/{image_type}.{ext}"
-    upload_image(image_path, s3_key)
+    crop_path = f"{UPLOAD_DIR}/{image_id}_{image_type}_crop.{ext}"
 
-    return ok({
-        "s3_key": s3_key,
-        "bbox": results["bbox"],
-        "image_type": image_type
-    })
+    try:
+        img = Image.open(file.file)
+        img = ImageOps.exif_transpose(img) 
+        
+        MAX_LONG_SIDE = 1600
+        w, h = img.size
+        scale = min(1.0, MAX_LONG_SIDE / max(w, h))
+        
+        if scale < 1.0:
+            new_w, new_h = int(w * scale), int(h * scale)
+            img = img.resize((new_w, new_h), Image.LANCZOS)
+            
+        img = img.convert("RGB")
+        img.save(image_path, quality=92, optimize=True)
+        
+        results = pipeline_one.run(image_path)
+        
+        if results is None or "bbox" not in results:
+            return err("NO_CARD_DETECTED", "No card detected")
+    
+        bbox = results["bbox"]
+        x1, y1, x2, y2 = bbox[0], bbox[1], bbox[2], bbox[3]
+        
+        # Edge cases
+        img_w, img_h = img.size
+        left = max(0, int(x1))
+        top = max(0, int(y1))
+        right = min(img_w, int(x2))  
+        bottom = min(img_h, int(y2)) 
+        
+        # Perform Crop
+        cropped_img = img.crop((left, top, right, bottom))
+        cropped_img.save(crop_path, quality=95)
+
+        s3_key_original = f"cards/{image_id}/{image_type}.{ext}"
+        s3_key_crop = f"cards/{image_id}/{image_type}_crop.{ext}"
+        
+        upload_image(image_path, s3_key_original)
+        upload_image(crop_path, s3_key_crop)
+
+        return ok({
+            "s3_key_original": s3_key_original,
+            "s3_key_crop": s3_key_crop,
+            "bbox": results["bbox"],
+            "image_type": image_type
+        })
+
+    except Exception as e:
+        print(f"Error processing card: {e}")
+        return err("PROCESSING_ERROR", str(e))
     
 @app.post('/price-card')
 def price_card(req: PriceCardRequest):

@@ -1,43 +1,105 @@
 import { View, Text, Alert, Image, TouchableOpacity, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-npx expo install expo-image-manipulatorimport * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 
 const confirm = () => {
     const router = useRouter();
     const params = useLocalSearchParams(); // To get information
 
+    console.log("Screen Params:", JSON.stringify(params, null, 2));
+
     // Previous params from capture
     const currentUri = params.originalUri as string; // Current uri
     const bbox = params.bbox ? JSON.parse(params.bbox as string) : null; // Bounding box for cropping
-    const { s3Key, side, existingFrontUri, existingFrontKey, existingBackUri, existingBackKey } = params; // where the image is stored and which side
+    const { s3_key_original, s3_key_crop, side, existingFrontUri, existingFrontKey, existingBackUri, existingBackKey } = params; // where the image is stored and which side
 
     const [displayedUri, setDisplayedUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        autoCrop();
-    }, []);
+        console.log("useEffect triggered.");
+
+        if (currentUri && bbox) {
+            autoCrop();
+        }
+    }, [currentUri, params.bbox]);
 
     const autoCrop = async () => {
+        console.log("Starting auto-crop with bbox:", bbox);
+        // No BBox case
         if (!bbox) {
-            // No bounding box, show original photo
+            console.log('No bounding box provided');
             setDisplayedUri(currentUri);
             setLoading(false);
             return;
         }
 
         try {
-            const [x, y, w, h] = bbox;
-            const result = await manipulateAsync(
+            const { width: imgW, height: imgH } = await new Promise<{ width: number, height: number }>((resolve, reject) => {
+                Image.getSize(currentUri, (w, h) => resolve({ width: w, height: h }), reject);
+            });
+
+            const MAX_SIDE = 1600;
+            const currentLongSide = Math.max(imgW, imgH);
+            const scale = currentLongSide > MAX_SIDE ? currentLongSide / MAX_SIDE : 1;
+
+            // Round to integers incase cropping returns floats
+            let x1 = bbox[0] * scale;
+            let y1 = bbox[1] * scale;
+            let x2 = bbox[2] * scale;
+            let y2 = bbox[3] * scale;
+
+            // Crop box stays strictly inside the image
+            const originX = Math.max(0, Math.round(x1));
+            const originY = Math.max(0, Math.round(y1));
+            
+            // Width is (Right - Left), Height is (Bottom - Top)
+            let w = Math.round(x2 - x1);
+            let h = Math.round(y2 - y1);
+
+            console.log({
+                w: w,
+                h: h,
+                imgW: imgW,
+                imgH: imgH,
+                originX: originX,
+                originY: originY,
+                remainingX: imgW - originX,
+                remainingY: imgH - originY 
+            });
+
+            let width = Math.min(w, imgW - originX);
+            let height = Math.min(h, imgH - originY);
+
+            console.log({
+                imgW, imgH,
+                originX, originY,
+                calculatedW: w, calculatedH: h,
+                finalWidth: width, finalHeight: height
+            });
+
+            // Ensure at least 1 pixel
+            width = Math.max(1, width);
+            height = Math.max(1, height);
+
+            const result = await ImageManipulator.manipulateAsync(
                 currentUri,
-                [{ crop: { originX: x, originY: y, width: w, height: h } }],
-                { compress: 1, format: SaveFormat.JPEG }
+                [{
+                    crop: {
+                        originX: originX,
+                        originY: originY,
+                        width: width,
+                        height: height
+                    }
+                }],
+                { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
             );
 
-            console.log("Auto-cropping successful:", result.uri);
 
+            console.log("Auto-cropping successful:", result.uri);
             setDisplayedUri(result.uri);
         } catch (error) {
             setDisplayedUri(currentUri); // Fallback to original
@@ -91,10 +153,10 @@ const confirm = () => {
             pathname: "/camera/staging",
             params: {
                 finalFrontUri: isFront ? displayedUri : existingFrontUri,
-                finalFrontKey: isFront ? s3Key : existingFrontKey,
+                finalFrontKey: isFront ? s3_key_crop : existingFrontKey,
 
                 finalBackUri: isFront ? existingBackUri : displayedUri,
-                finalBackKey: isFront ? existingBackKey : s3Key,
+                finalBackKey: isFront ? existingBackKey : s3_key_crop,
             }
         });
     };
