@@ -128,7 +128,7 @@ const confirm = () => {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
                 allowsEditing: true,
-                aspect: [2.5, 3.5],
+                aspect: [9, 16],
                 quality: 1,
             });
 
