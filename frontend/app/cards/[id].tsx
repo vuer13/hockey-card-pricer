@@ -52,6 +52,10 @@ const CardDetails = () => {
         // TODO - get price card
     };
 
+    const viewPriceHistory = async () => {
+        // TODO - view price history
+    };
+
     if (loading) {
         return (
             <View className="flex-1 bg-black justify-center items-center">
@@ -102,6 +106,15 @@ const CardDetails = () => {
                     >
                         <Text className="text-white font-bold text-lg">
                             Get eBay Price
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={viewPriceHistory}
+                        className="bg-green-600 w-full py-4 rounded-xl items-center shadow-lg"
+                    >
+                        <Text className="text-white font-bold text-lg">
+                            View Price History
                         </Text>
                     </TouchableOpacity>
                 </View>
