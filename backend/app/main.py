@@ -232,24 +232,28 @@ def price_card(req: PriceCardRequest):
     }
     pricing = run_pricing(pricing_input)
     
-    if "price_estimate" not in pricing:
+    if "estimate" not in pricing:
         return err("PRICING_NO_DATA", "Unable to price card with given details")
     
     db = SessionLocal()
     
-    price = CardPrice(
-        card_info_id=req.card_id,
-        estimate=pricing["estimate"],
-        low=pricing["price_low"],
-        high=pricing["price_high"],
-        num_sales=pricing["sales_count"],
-        confidence=pricing["confidence"]
-    )
+    try:
+        price = CardPrice(
+            card_info_id=req.card_id,
+            estimate=pricing["estimate"],
+            low=pricing["price_low"],
+            high=pricing["price_high"],
+            num_sales=pricing["sales_count"],
+            confidence=pricing["confidence"]
+        )
     
-    db.add(price)
-    db.commit()
-    
-    db.close()
+        db.add(price)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return err("DB_ERROR", str(e))
+    finally:
+        db.close()
     
     return ok({pricing})
 

@@ -60,7 +60,21 @@ const CardDetails = () => {
         try {
             setPriceLoading(true);
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
-            const response = await fetch(`${API_URL}/price_card`);
+
+            const query = {
+                name: card?.name,       
+                card_series: card?.card_series,  
+                card_number: card?.card_number,  
+                card_id: id        
+            };
+
+            const response = await fetch(`${API_URL}/price-card`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(query),
+            });
             const json = await response.json();
 
             if (json.status === 'ok') {
