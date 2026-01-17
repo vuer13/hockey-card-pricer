@@ -21,6 +21,14 @@ const CardDetails = () => {
 
     const [card, setCard] = useState<CardData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [priceLoading, setPriceLoading] = useState(false);
+
+    // Card Price stuff
+    const [price, setPrice] = useState(null);
+    const [priceLow, setPriceLow] = useState(null);
+    const [priceHigh, setPriceHigh] = useState(null);
+    const [confidence, setConfidence] = useState(null);
+    const [numSales, setNumSales] = useState(null);
 
     useEffect(() => {
         if (id) {
@@ -49,7 +57,27 @@ const CardDetails = () => {
     }
 
     const handlePrice = async () => {
-        // TODO - get price card
+        try {
+            setPriceLoading(true);
+            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
+            const response = await fetch(`${API_URL}/price_card`);
+            const json = await response.json();
+
+            if (json.status === 'ok') {
+                setPrice(json.data.estimate);
+                setPriceLow(json.data.low);
+                setPriceHigh(json.data.high);
+                setConfidence(json.data.confidence);
+                setNumSales(json.data.num_sales);
+            } else {
+                Alert.alert('Error', 'Failed to fetch price.');
+            }
+        } catch (error) {
+            console.error('Error fetching price:', error);
+            Alert.alert('Error', 'Failed to fetch price.');
+        } finally {
+            setPriceLoading(false);
+        }
     };
 
     const viewPriceHistory = async () => {

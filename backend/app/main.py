@@ -240,9 +240,9 @@ def price_card(req: PriceCardRequest):
     price = CardPrice(
         card_info_id=req.card_id,
         estimate=pricing["estimate"],
-        low=pricing["low"],
-        high=pricing["high"],
-        num_sales=pricing["num_sales"],
+        low=pricing["price_low"],
+        high=pricing["price_high"],
+        num_sales=pricing["sales_count"],
         confidence=pricing["confidence"]
     )
     
