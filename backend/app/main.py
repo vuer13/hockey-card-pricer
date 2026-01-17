@@ -19,6 +19,7 @@ from db.database import SessionLocal
 from db.model import Card, CardImage, CardPrice
 from db.db_get import get_cards
 from db.init_db import init_db
+from db.schemas import TrendPoint
 
 load_dotenv()
 
@@ -324,6 +325,20 @@ def read_cards(q: str = None, db: Session = Depends(get_db)):
         })
         
     return ok(formatted_cards)
+
+@app.get("/price-trend/{card_id}", response_model=List[TrendPoint])
+def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
+    """
+    Fetches price history sorted by date 
+    """
+    trends = (
+        db.query(CardPrice)
+        .filter(CardPrice.card_info_id == card_id)
+        .order_by(asc(CardPrice.created_at))  # Oldest first for the chart
+        .all()
+    )
+    
+    return ok(trends)
 
 # To ensure API is working
 @app.get("/health-check")
