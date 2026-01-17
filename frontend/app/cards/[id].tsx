@@ -95,7 +95,12 @@ const CardDetails = () => {
     };
 
     const viewPriceHistory = async () => {
-        // TODO - view price history
+        router.push({
+            pathname: '/cards/[id]_price',
+            params: {
+                id: id
+            }
+        });
     };
 
     if (loading) {
