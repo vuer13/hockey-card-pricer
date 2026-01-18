@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react'
+import { useFocusEffect, useRouter } from 'expo-router';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
@@ -18,10 +18,12 @@ const Saved = () => {
     const [cards, setCards] = useState<Card[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchSavedCards();
-    }, []);
-
+    // Runs every time when navigated to this tab
+    useFocusEffect(
+        useCallback(() => {
+            fetchSavedCards();
+        }, [])
+    );
     const fetchSavedCards = async () => {
         // TODO
     };
