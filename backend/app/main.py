@@ -64,6 +64,9 @@ class PriceCardRequest(BaseModel):
     card_series: str
     card_number: str
     
+class UpdateSaveRequest(BaseModel):
+    saved: bool
+    
 # Response Helpers
 def ok(data):
     return {"status": "ok", "data": data, "error": None}
@@ -344,6 +347,25 @@ def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
     )
     
     return trends # For response_model above, no ok
+
+@app.put("/card/{card_id}/save")
+def update_card_save(card_id, req: UpdateSaveRequest, db: Session = Depends(get_db)):
+    """ Updates save status of a card """
+    try:
+        card = db.query(Card).filter(Card.id == card_id).first()
+        
+        if not card:
+            return err("NOT_FOUND", "Card not found")
+        
+        card.saved = req.saved
+        
+        db.commit()
+        db.refresh(card)
+        
+        return ok({"id": str(card.id), "saved": card.saved})
+    except Exception as e:
+        db.rollback()
+        return err("DB_ERROR", str(e))
 
 # To ensure API is working
 @app.get("/health-check")
