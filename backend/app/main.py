@@ -348,6 +348,32 @@ def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
     
     return trends # For response_model above, no ok
 
+@app.get("/saved-cards")
+def get_saved_cards(db: Session = Depends(get_db)):
+    """Returns all cards that are "saved" """
+    
+    cards = db.query(Card).filter(Card.saved == True).order_by(Card.created_at.desc()).all()
+    
+    formatted_cards = []
+    base_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/"
+    
+    for card in cards:
+        images = db.query(CardImage).filter(CardImage.card_id == card.id).all()
+        front_key = next((img.s3_key for img in images if img.image_type == "front"), None)
+        
+        formatted_cards.append({
+            "id": str(card.id),
+            "name": card.name,
+            "card_series": card.card_series,
+            "card_number": card.card_number,
+            "team_name": card.team_name,
+            "card_type": card.card_type,
+            "image": f"{base_url}{front_key}" if front_key else None,
+            "saved": card.saved
+        })
+        
+    return ok(formatted_cards)
+
 @app.put("/card/{card_id}/save")
 def update_card_save(card_id, req: UpdateSaveRequest, db: Session = Depends(get_db)):
     """ Updates save status of a card """
