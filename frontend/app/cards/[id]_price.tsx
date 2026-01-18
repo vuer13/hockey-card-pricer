@@ -28,7 +28,7 @@ const PriceDetails = () => {
             if (json.status === 'ok') {
                 const data = json.data;
                 if (data && Array.isArray(data) && data.length > 0) {
-                    // TODO - do something with data
+                    processData(data);
                 }
             }
         } catch (error) {
@@ -36,6 +36,10 @@ const PriceDetails = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const processData = (data: any[]) => {
+        // TODO - Process data into history and chart set above
     };
     
     return (
