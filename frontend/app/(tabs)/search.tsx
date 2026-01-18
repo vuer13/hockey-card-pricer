@@ -40,6 +40,8 @@ export default function Index() {
     const [cards, setCards] = useState<Card[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const [query, setQuery] = useState('');
+
     useEffect(() => {
         fetchCards();
     }, []);
@@ -59,6 +61,12 @@ export default function Index() {
         }
     };
 
+    const filteredCards = cards.filter(card =>
+        (card.name?.toLowerCase() || '').includes(query.toLowerCase()) ||
+        (card.team_name?.toLowerCase() || '').includes(query.toLowerCase()) ||
+        (card.card_number?.toString().toLowerCase() || '').includes(query.toLowerCase())
+    );
+
     return (
         <View className="flex-1 bg-primary">
             <Image source={images.bg} className="absolute w-full z-0" />
@@ -69,7 +77,7 @@ export default function Index() {
                 </View>
             ) : (
                 <FlatList
-                    data={cards}
+                    data={filteredCards}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => <CardItem item={item} />}
                     contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
@@ -78,10 +86,13 @@ export default function Index() {
                         <View className="mb-6">
                             <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto" />
                             <SearchBar
-                                onPress={() => router.push('/search')}
-                                placeholder="Search for cards"
+                                value={query}
+                                onChangeText={(text: string) => setQuery(text)}
+                                placeholder="Search for cards with name, team name or card series"
                             />
-                            <Text className="text-white text-2xl font-bold mt-8">Your Latest Cards</Text>
+                            <Text className="text-white text-2xl font-bold mt-8">
+                                {query ? "Search Results" : "Your Latest Cards"}
+                            </Text>
                         </View>
                     )}
                 />
