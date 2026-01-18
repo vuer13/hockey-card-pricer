@@ -338,7 +338,7 @@ def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
         .all()
     )
     
-    return ok(trends)
+    return trends # For response_model above, no ok
 
 # To ensure API is working
 @app.get("/health-check")
