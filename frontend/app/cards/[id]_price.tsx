@@ -12,12 +12,30 @@ const PriceDetails = () => {
 
     useEffect(() => {
         if (id) {
-            // TODO - fetch history
+            fetchHistory();
         }
     }, [id]);
 
     const fetchHistory = async () => {
-        // TODO - API call to get history
+        try {
+            setLoading(true);
+
+            const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
+
+            const response = await fetch(`${API_BASE}/price-trend/${id}`);
+            const json = await response.json();
+
+            if (json.status === 'ok') {
+                const data = json.data;
+                if (data && Array.isArray(data) && data.length > 0) {
+                    // TODO - do something with data
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching price history:', error);
+        } finally {
+            setLoading(false);
+        }
     };
     
     return (

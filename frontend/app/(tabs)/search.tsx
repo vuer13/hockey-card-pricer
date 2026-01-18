@@ -49,7 +49,7 @@ export default function Index() {
             const response = await fetch(`${API_BASE}/cards`);
             const data = await response.json();
             console.log("RAW RESPONSE:", data);
-            if (response.ok) {
+            if (data.status === 'ok') {
                 setCards(data.cards);
             }
         } catch (error) {
