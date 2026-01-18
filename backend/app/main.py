@@ -331,7 +331,7 @@ def read_cards(q: str = None, db: Session = Depends(get_db)):
         
     return ok(formatted_cards)
 
-@app.get("/price-trend/{card_id}", response_model=List[TrendPoint])
+@app.get("/card/{card_id}/price-trend", response_model=List[TrendPoint])
 def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
     """
     Fetches price history sorted by date 
