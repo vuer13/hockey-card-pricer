@@ -5,7 +5,7 @@ import SearchBar from "@/components/SearchBar";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
-const API_BASE = process.env.API_BASE_HOME;
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
 interface Card {
     id: string;
@@ -46,10 +46,10 @@ export default function Index() {
 
     const fetchCards = async () => {
         try {
-            const response = await fetch(`${API_BASE}/cards`);
+            const response = await fetch(`${API_BASE}/cards?limit=30`);
             const data = await response.json();
             console.log("RAW RESPONSE:", data);
-            if (response.ok) {
+            if (data.status === 'ok') {
                 setCards(data.cards);
             }
         } catch (error) {

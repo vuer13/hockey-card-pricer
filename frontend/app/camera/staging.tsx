@@ -1,6 +1,6 @@
 import { View, Text, Alert, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const staging = () => {
@@ -14,25 +14,37 @@ const staging = () => {
 
     // Listener checking to see if new information as been added
     useEffect(() => {
-        if (params?.capturedUri && params?.side && params?.s3Key) {
-            const newData = {
-                uri: params.capturedUri as string,
-                s3Key: params.s3Key as string
-            };
-
-            if (params.side === 'front') {
-                setFrontImage(newData);
-            }
-            if (params.side === 'back') {
-                setBackImage(newData);
+        if (params.finalFrontUri && params.finalFrontKey) {
+            const newUri = params.finalFrontUri as string;
+            if (frontImage?.uri !== newUri) {
+                setFrontImage({
+                    uri: newUri,
+                    s3Key: params.finalFrontKey as string
+                });
             }
         }
-    }, [params]); // Dependency array, watching params for any changes
+
+        if (params.finalBackUri && params.finalBackKey) {
+            const newUri = params.finalBackUri as string;
+            if (backImage?.uri !== newUri) {
+                setBackImage({
+                    uri: newUri,
+                    s3Key: params.finalBackKey as string
+                });
+            }
+        }
+    }, [params.finalFrontUri, params.finalFrontKey, params.finalBackUri, params.finalBackKey]);
 
     const handleScan = (side: 'front' | 'back') => {
         router.push({
             pathname: "/camera/capture",
-            params: { side: side } // Tells the camera which side is being scanned
+            params: {
+                side: side, // Tells the camera which side is being scanned
+                existingFrontUri: frontImage?.uri || "",
+                existingFrontKey: frontImage?.s3Key || "",
+                existingBackUri: backImage?.uri || "",
+                existingBackKey: backImage?.s3Key || ""
+            }
         });
     };
 
@@ -59,14 +71,11 @@ const staging = () => {
                 type: 'image/jpeg'
             } as any);
 
-            const API_URL = process.env.API_BASE_HOME;
+            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             const response = await fetch(`${API_URL}/extract-text`, {
                 method: 'POST',
-                body: formData,
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                body: formData
             });
 
             const json = await response.json();
@@ -145,7 +154,6 @@ const staging = () => {
                         onPress={handleFinalize}
                         className={`w-full py-4 rounded-xl items-center ${(frontImage && backImage) ? 'bg-blue-600' : 'bg-gray-800'
                             }`}
-                        disabled={!frontImage || !backImage}
                     >
                         <Text className={`text-lg font-bold ${(frontImage && backImage) ? 'text-white' : 'text-gray-500'
                             }`}>

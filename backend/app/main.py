@@ -5,6 +5,7 @@ import os
 import uuid
 import cv2
 from dotenv import load_dotenv
+from PIL import Image, ImageOps
 
 from scripts.card_detection import CardDetectionPipeline
 from scripts.text_detection import TextExtraction
@@ -18,6 +19,7 @@ from db.database import SessionLocal
 from db.model import Card, CardImage, CardPrice
 from db.db_get import get_cards
 from db.init_db import init_db
+from db.schemas import TrendPoint
 
 load_dotenv()
 
@@ -163,28 +165,62 @@ def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
     if image_type is None or image_type not in ["front", "back"]:
         return err("INVALID_INPUT", "Image type must be 'front' or 'back'")
 
-    # Save uploaded image
+    # Setup Paths
     ext = file.filename.split(".")[-1]
-    image_id = str(uuid.uuid4())  # Generates identifier so uploaded files don't get overwritten
+    image_id = str(uuid.uuid4())
     image_path = f"{UPLOAD_DIR}/{image_id}.{ext}"
-    
-    with open(image_path, "wb") as f:
-        f.write(file.file.read())
-        
-    # Run detection pipeline
-    results = pipeline_one.run(image_path)
-    
-    if results is None:
-        return err("NO_CARD_DETECTED", "No card detected in image")
-    
-    s3_key = f"cards/{image_id}/{image_type}.{ext}"
-    upload_image(image_path, s3_key)
+    crop_path = f"{UPLOAD_DIR}/{image_id}_{image_type}_crop.{ext}"
 
-    return ok({
-        "s3_key": s3_key,
-        "bbox": results["bbox"],
-        "image_type": image_type
-    })
+    try:
+        img = Image.open(file.file)
+        img = ImageOps.exif_transpose(img) 
+        
+        MAX_LONG_SIDE = 1600
+        w, h = img.size
+        scale = min(1.0, MAX_LONG_SIDE / max(w, h))
+        
+        if scale < 1.0:
+            new_w, new_h = int(w * scale), int(h * scale)
+            img = img.resize((new_w, new_h), Image.LANCZOS)
+            
+        img = img.convert("RGB")
+        img.save(image_path, quality=92, optimize=True)
+        
+        results = pipeline_one.run(image_path)
+        
+        if results is None or "bbox" not in results:
+            return err("NO_CARD_DETECTED", "No card detected")
+    
+        bbox = results["bbox"]
+        x1, y1, x2, y2 = bbox[0], bbox[1], bbox[2], bbox[3]
+        
+        # Edge cases
+        img_w, img_h = img.size
+        left = max(0, int(x1))
+        top = max(0, int(y1))
+        right = min(img_w, int(x2))  
+        bottom = min(img_h, int(y2)) 
+        
+        # Perform Crop
+        cropped_img = img.crop((left, top, right, bottom))
+        cropped_img.save(crop_path, quality=95)
+
+        s3_key_original = f"cards/{image_id}/{image_type}.{ext}"
+        s3_key_crop = f"cards/{image_id}/{image_type}_crop.{ext}"
+        
+        upload_image(image_path, s3_key_original)
+        upload_image(crop_path, s3_key_crop)
+
+        return ok({
+            "s3_key_original": s3_key_original,
+            "s3_key_crop": s3_key_crop,
+            "bbox": results["bbox"],
+            "image_type": image_type
+        })
+
+    except Exception as e:
+        print(f"Error processing card: {e}")
+        return err("PROCESSING_ERROR", str(e))
     
 @app.post('/price-card')
 def price_card(req: PriceCardRequest):
@@ -197,24 +233,28 @@ def price_card(req: PriceCardRequest):
     }
     pricing = run_pricing(pricing_input)
     
-    if "price_estimate" not in pricing:
+    if "estimate" not in pricing:
         return err("PRICING_NO_DATA", "Unable to price card with given details")
     
     db = SessionLocal()
     
-    price = CardPrice(
-        card_info_id=req.card_id,
-        estimate=pricing["estimate"],
-        low=pricing["low"],
-        high=pricing["high"],
-        num_sales=pricing["num_sales"],
-        confidence=pricing["confidence"]
-    )
+    try:
+        price = CardPrice(
+            card_info_id=req.card_id,
+            estimate=pricing["estimate"],
+            low=pricing["price_low"],
+            high=pricing["price_high"],
+            num_sales=pricing["sales_count"],
+            confidence=pricing["confidence"]
+        )
     
-    db.add(price)
-    db.commit()
-    
-    db.close()
+        db.add(price)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return err("DB_ERROR", str(e))
+    finally:
+        db.close()
     
     return ok({pricing})
 
@@ -224,17 +264,30 @@ def get_card(card_id: str):
     """Fetches card details by ID (PK)"""
     
     db = SessionLocal()
-    card = db.query(Card).get(card_id)
-    
-    db.close()
-    return ok({
-        "id": card.id,
-        "name": card.name,
-        "card_series": card.card_series,
-        "card_number": card.card_number,
-        "team_name": card.team_name,
-        "card_type": card.card_type
-    }) if card else err("INVALID_INPUT", "Not found")
+    try:
+        card = db.query(Card).get(card_id)
+        
+        if not card:
+            return err("INVALID_INPUT", "Not found")    
+        
+        images = db.query(CardImage).filter(CardImage.card_id == card_id).all()
+        
+        # Organize/sort keys to get front key and back key
+        front_key = next((img.s3_key for img in images if img.image_type == "front"), None)
+        back_key = next((img.s3_key for img in images if img.image_type == "back"), None)
+        
+        return ok({
+            "id": card.id,
+            "name": card.name,
+            "card_series": card.card_series,
+            "card_number": card.card_number,
+            "team_name": card.team_name,
+            "card_type": card.card_type,
+            "front_image_key": front_key,
+            "back_image_key": back_key
+        })
+    finally:
+        db.close()
 
 @app.get("/card/{card_id}/prices")
 def get_prices(card_id: str):
@@ -272,6 +325,20 @@ def read_cards(q: str = None, db: Session = Depends(get_db)):
         })
         
     return ok(formatted_cards)
+
+@app.get("/price-trend/{card_id}", response_model=List[TrendPoint])
+def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
+    """
+    Fetches price history sorted by date 
+    """
+    trends = (
+        db.query(CardPrice)
+        .filter(CardPrice.card_info_id == card_id)
+        .order_by(asc(CardPrice.created_at))  # Oldest first for the chart
+        .all()
+    )
+    
+    return trends # For response_model above, no ok
 
 # To ensure API is working
 @app.get("/health-check")

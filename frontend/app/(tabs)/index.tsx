@@ -10,7 +10,7 @@ export default function Index() {
 
             <TouchableOpacity
                 onPress={() => {
-                    router.push("/camera/capture");
+                    router.push("/camera/staging");
                     console.log("Navigate to Camera Screen");
                 }}
                 className="bg-blue-600 px-8 py-4 rounded-full"
