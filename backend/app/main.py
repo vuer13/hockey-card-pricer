@@ -3,9 +3,11 @@ from pydantic import BaseModel
 import numpy as np
 import os
 import uuid
+from uuid import UUID          
 import cv2
 from dotenv import load_dotenv
 from PIL import Image, ImageOps
+from typing import List           
 
 from scripts.card_detection import CardDetectionPipeline
 from scripts.text_detection import TextExtraction
@@ -14,6 +16,7 @@ from scripts.helpers import load_models
 
 from utils.s3_images import upload_image
 
+from sqlalchemy import asc   
 from sqlalchemy.orm import Session
 from db.database import SessionLocal
 from db.model import Card, CardImage, CardPrice
@@ -60,6 +63,9 @@ class PriceCardRequest(BaseModel):
     name: str
     card_series: str
     card_number: str
+    
+class UpdateSaveRequest(BaseModel):
+    saved: bool
     
 # Response Helpers
 def ok(data):
@@ -284,7 +290,8 @@ def get_card(card_id: str):
             "team_name": card.team_name,
             "card_type": card.card_type,
             "front_image_key": front_key,
-            "back_image_key": back_key
+            "back_image_key": back_key,
+            "saved": card.saved
         })
     finally:
         db.close()
@@ -321,12 +328,13 @@ def read_cards(q: str = None, db: Session = Depends(get_db)):
             "card_number": card.card_number,
             "team_name": card.team_name,
             "card_type": card.card_type,
-            "image": f"{base_url}{s3_key}" if s3_key else None
+            "image": f"{base_url}{s3_key}" if s3_key else None,
+            "saved": card.saved
         })
         
     return ok(formatted_cards)
 
-@app.get("/price-trend/{card_id}", response_model=List[TrendPoint])
+@app.get("/card/{card_id}/price-trend", response_model=List[TrendPoint])
 def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
     """
     Fetches price history sorted by date 
@@ -339,6 +347,51 @@ def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
     )
     
     return trends # For response_model above, no ok
+
+@app.get("/saved-cards")
+def get_saved_cards(db: Session = Depends(get_db)):
+    """Returns all cards that are "saved" """
+    
+    cards = db.query(Card).filter(Card.saved == True).order_by(Card.created_at.desc()).all()
+    
+    formatted_cards = []
+    base_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/"
+    
+    for card in cards:
+        images = db.query(CardImage).filter(CardImage.card_id == card.id).all()
+        front_key = next((img.s3_key for img in images if img.image_type == "front"), None)
+        
+        formatted_cards.append({
+            "id": str(card.id),
+            "name": card.name,
+            "card_series": card.card_series,
+            "card_number": card.card_number,
+            "team_name": card.team_name,
+            "card_type": card.card_type,
+            "image": f"{base_url}{front_key}" if front_key else None,
+            "saved": card.saved
+        })
+        
+    return ok(formatted_cards)
+
+@app.put("/card/{card_id}/save")
+def update_card_save(card_id, req: UpdateSaveRequest, db: Session = Depends(get_db)):
+    """ Updates save status of a card """
+    try:
+        card = db.query(Card).filter(Card.id == card_id).first()
+        
+        if not card:
+            return err("NOT_FOUND", "Card not found")
+        
+        card.saved = req.saved
+        
+        db.commit()
+        db.refresh(card)
+        
+        return ok({"id": str(card.id), "saved": card.saved})
+    except Exception as e:
+        db.rollback()
+        return err("DB_ERROR", str(e))
 
 # To ensure API is working
 @app.get("/health-check")

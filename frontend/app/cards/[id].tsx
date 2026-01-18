@@ -3,9 +3,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import saved from '../(tabs)/saved';
 
 type CardData = {
-    id: number;
+    id: string;
     name: string;
     card_series: string;
     card_number: string;
@@ -13,15 +14,19 @@ type CardData = {
     card_type: string;
     front_image_key: string;
     back_image_key: string;
+    saved: boolean;
 };
 
 const CardDetails = () => {
     const router = useRouter();
     const { id } = useLocalSearchParams(); // Grabs id from filename 
+    const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
+
 
     const [card, setCard] = useState<CardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [priceLoading, setPriceLoading] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
 
     // Card Price stuff
     const [price, setPrice] = useState(null);
@@ -36,10 +41,16 @@ const CardDetails = () => {
         }
     }, [id]);
 
+    useEffect(() => {
+        if (card) {
+            setIsSaved(card.saved || false);
+        }
+    }, [card]);
+
     const fetchCardDetails = async () => {
         try {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
-            const response = await fetch(`${API_URL}/cards/${id}`);
+            const response = await fetch(`${API_URL}/card/${id}`);
             const json = await response.json();
 
             if (json.status === 'ok') {
@@ -59,7 +70,6 @@ const CardDetails = () => {
     const handlePrice = async () => {
         try {
             setPriceLoading(true);
-            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             const query = {
                 name: card?.name,
@@ -103,6 +113,33 @@ const CardDetails = () => {
         });
     };
 
+    const saveCard = async () => {
+        try {
+            const newStatus = !isSaved;
+
+            const response = await fetch(`${API_URL}/card/${id}/save`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    saved: newStatus
+                }),
+            });
+
+            const json = await response.json();
+
+            if (json.status === 'ok') {
+                setIsSaved(newStatus);
+            } else {
+                Alert.alert("Error", "Could not save card status");
+            }
+        } catch (error) {
+            console.error('Error saving card:', error);
+            Alert.alert('Error', 'Failed to save card.');
+        }
+    }
+
     if (loading) {
         return (
             <View className="flex-1 bg-black justify-center items-center">
@@ -130,6 +167,11 @@ const CardDetails = () => {
                             <Ionicons name="arrow-back" size={24} color="white" />
                         </TouchableOpacity >
                         <Text className="text-white text-xl font-bold">Card Details</Text>
+                        <TouchableOpacity onPress={saveCard} className="mr-4">
+                            <Text className="text-white font-bold">
+                                {isSaved ? "Unsave" : "Save Card"}
+                            </Text>
+                        </TouchableOpacity >
                     </View >
 
                     <ScrollView className="p-4">

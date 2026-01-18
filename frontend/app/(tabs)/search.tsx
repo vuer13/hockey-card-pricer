@@ -1,6 +1,6 @@
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
-import { Image, View, Text, ActivityIndicator, FlatList } from "react-native";
+import { Image, View, Text, ActivityIndicator, FlatList, TouchableOpacity } from "react-native";
 import SearchBar from "@/components/SearchBar";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -79,7 +79,11 @@ export default function Index() {
                 <FlatList
                     data={filteredCards}
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => <CardItem item={item} />}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => router.push(`/cards/${item.id}`)}>
+                            <CardItem item={item} />
+                        </TouchableOpacity>
+                    )}
                     contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
                     showsVerticalScrollIndicator={false}
                     ListHeaderComponent={() => (
