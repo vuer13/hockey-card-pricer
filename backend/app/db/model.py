@@ -13,6 +13,7 @@ class Card(Base):
     card_type = Column(String, default='Base')
     team_name = Column(String)
     created_at = Column(DateTime, server_default=func.now())
+    saved = Column(Boolean, nullable=False, default=False, server_default=expression.false())
     
 class CardImage(Base):
     __tablename__ = 'card_image'

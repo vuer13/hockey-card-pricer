@@ -3,9 +3,11 @@ from pydantic import BaseModel
 import numpy as np
 import os
 import uuid
+from uuid import UUID          
 import cv2
 from dotenv import load_dotenv
 from PIL import Image, ImageOps
+from typing import List           
 
 from scripts.card_detection import CardDetectionPipeline
 from scripts.text_detection import TextExtraction
@@ -14,6 +16,7 @@ from scripts.helpers import load_models
 
 from utils.s3_images import upload_image
 
+from sqlalchemy import asc   
 from sqlalchemy.orm import Session
 from db.database import SessionLocal
 from db.model import Card, CardImage, CardPrice
@@ -284,7 +287,8 @@ def get_card(card_id: str):
             "team_name": card.team_name,
             "card_type": card.card_type,
             "front_image_key": front_key,
-            "back_image_key": back_key
+            "back_image_key": back_key,
+            "saved": card.saved
         })
     finally:
         db.close()
@@ -321,7 +325,8 @@ def read_cards(q: str = None, db: Session = Depends(get_db)):
             "card_number": card.card_number,
             "team_name": card.team_name,
             "card_type": card.card_type,
-            "image": f"{base_url}{s3_key}" if s3_key else None
+            "image": f"{base_url}{s3_key}" if s3_key else None,
+            "saved": card.saved
         })
         
     return ok(formatted_cards)

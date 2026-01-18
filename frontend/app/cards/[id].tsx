@@ -103,6 +103,10 @@ const CardDetails = () => {
         });
     };
 
+    const saveCard = async () => {
+        // TODO - save card
+    }
+
     if (loading) {
         return (
             <View className="flex-1 bg-black justify-center items-center">
@@ -130,6 +134,9 @@ const CardDetails = () => {
                             <Ionicons name="arrow-back" size={24} color="white" />
                         </TouchableOpacity >
                         <Text className="text-white text-xl font-bold">Card Details</Text>
+                        <TouchableOpacity onPress={saveCard} className="mr-4">
+                            <Text>Save Card</Text>
+                        </TouchableOpacity >
                     </View >
 
                     <ScrollView className="p-4">
