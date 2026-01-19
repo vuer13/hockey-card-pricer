@@ -24,16 +24,17 @@ interface ChartData {
 const PriceDetails = () => {
     const router = useRouter();
     const { id } = useLocalSearchParams();
+    const cardId = Array.isArray(id) ? id[0] : id;
 
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState<PricePoint[]>([]);
     const [chartData, setChart] = useState<ChartData | null>(null);
 
     useEffect(() => {
-        if (id) {
+        if (cardId) {
             fetchHistory();
         }
-    }, [id]);
+    }, [cardId]);
 
     const fetchHistory = async () => {
         try {
@@ -41,7 +42,7 @@ const PriceDetails = () => {
 
             const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
-            const response = await fetch(`${API_BASE}/card/${id}/price-trend`);
+            const response = await fetch(`${API_BASE}/card/${cardId}/price-trend`);
 
             if (response.ok) {
                 const json = await response.json();

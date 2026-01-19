@@ -3,6 +3,7 @@ import base64
 import os
 from dotenv import load_dotenv
 import numpy as np
+import re
 
 load_dotenv()
 
@@ -54,18 +55,30 @@ def get_ebay_token():
 def normalize_query(fields):
     """Build noise-free eBay search query from card fields"""
     
+    # Year separately
+    series = fields.get('card_series', '')
+    year_match = re.search(r"\d{4}(-\d{2})?", series)
+    year = year_match.group(0) if year_match else ""
+
+    name = fields.get('name', '')
+    card_number = fields.get('card_number', '')
+    card_type = fields.get('card_type', 'Base')
+
+    special_type = card_type if card_type and card_type != "Base" else ""
+
     parts = [
-        fields.get('card_series'),
-        fields.get('name'),
-        f"{fields.get('card_type')}" if fields.get('card_type') != "Base" else fields.get('card_number')
+        year,
+        name,
+        card_number,
+        special_type
     ]
     
-    raw = " ".join([p for p in parts if p]).lower()
-    raw = re.sub(r"[^\w\s]", "", raw)
+    query = " ".join([p for p in parts if p]).strip()
     
-    tokens = [t for t in raw.split() if t not in NOISE_TERMS]
+    query = re.sub(r"[^a-zA-Z0-9\-\s]", "", query)
     
-    return " ".join(tokens).strip()
+    print(f"Generated Query: {query}")
+    return query
 
 def get_sold_prices(query, limit=25):
     """eBay sold listings search active; Returns a list of sale prices"""
@@ -170,6 +183,8 @@ def compute_confidence(stats):
     
 def price_card(fields):
     """Takes confirmed card fields and returns a market estimate"""
+    
+    print(fields)
 
     query = normalize_query(fields)
     
@@ -188,10 +203,10 @@ def price_card(fields):
     return {
         "query": query,
         "estimate": stats["estimate"],
-        "price_low": stats["price_low"],
-        "price_high": stats["price_high"],
+        "price_low": stats["low"],
+        "price_high": stats["high"],
         "confidence": confidence,
-        "sales_count": stats["sales_count"]
+        "sales_count": stats["num_sales"]
     }
     
 def test():

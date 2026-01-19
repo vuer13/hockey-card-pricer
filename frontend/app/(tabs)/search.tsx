@@ -52,7 +52,7 @@ export default function Index() {
             const data = await response.json();
             console.log("RAW RESPONSE:", data);
             if (data.status === 'ok') {
-                setCards(data.cards);
+                setCards(data.data);
             }
         } catch (error) {
             console.error('Error fetching cards:', error);
@@ -61,11 +61,13 @@ export default function Index() {
         }
     };
 
-    const filteredCards = cards.filter(card =>
-        (card.name?.toLowerCase() || '').includes(query.toLowerCase()) ||
-        (card.team_name?.toLowerCase() || '').includes(query.toLowerCase()) ||
-        (card.card_number?.toString().toLowerCase() || '').includes(query.toLowerCase())
-    );
+    const filteredCards = query 
+        ? (cards || []).filter(card =>
+            (card.name?.toLowerCase() || '').includes(query.toLowerCase()) ||
+            (card.team_name?.toLowerCase() || '').includes(query.toLowerCase()) ||
+            (card.card_number?.toString().toLowerCase() || '').includes(query.toLowerCase())
+          )
+        : cards; // Return all cards if query is empty
 
     return (
         <View className="flex-1 bg-primary">
@@ -86,6 +88,8 @@ export default function Index() {
                     )}
                     contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
                     showsVerticalScrollIndicator={false}
+                    keyboardDismissMode="on-drag"
+                    keyboardShouldPersistTaps="handled"
                     ListHeaderComponent={() => (
                         <View className="mb-6">
                             <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto" />

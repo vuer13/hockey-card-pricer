@@ -63,6 +63,7 @@ class PriceCardRequest(BaseModel):
     name: str
     card_series: str
     card_number: str
+    card_type: str | None = "Base"
     
 class UpdateSaveRequest(BaseModel):
     saved: bool
@@ -235,7 +236,8 @@ def price_card(req: PriceCardRequest):
     pricing_input = {
         "name": req.name,
         "card_series": req.card_series,
-        "card_number": req.card_number
+        "card_number": req.card_number,
+        "card_type": req.card_type
     }
     pricing = run_pricing(pricing_input)
     
@@ -262,7 +264,7 @@ def price_card(req: PriceCardRequest):
     finally:
         db.close()
     
-    return ok({pricing})
+    return ok(pricing)
 
 # Read endpoints
 @app.get("/card/{card_id}")

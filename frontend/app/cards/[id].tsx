@@ -22,6 +22,8 @@ const CardDetails = () => {
     const { id } = useLocalSearchParams(); // Grabs id from filename 
     const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
+    const rawId = Array.isArray(id) ? id[0] : id;
+    const cleanId = rawId?.replace('_price', '') || '';
 
     const [card, setCard] = useState<CardData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -36,10 +38,10 @@ const CardDetails = () => {
     const [numSales, setNumSales] = useState(null);
 
     useEffect(() => {
-        if (id) {
+        if (cleanId) {
             fetchCardDetails();
         }
-    }, [id]);
+    }, [cleanId]);
 
     useEffect(() => {
         if (card) {
@@ -50,7 +52,8 @@ const CardDetails = () => {
     const fetchCardDetails = async () => {
         try {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
-            const response = await fetch(`${API_URL}/card/${id}`);
+
+            const response = await fetch(`${API_URL}/card/${cleanId}`);
             const json = await response.json();
 
             if (json.status === 'ok') {
@@ -72,10 +75,11 @@ const CardDetails = () => {
             setPriceLoading(true);
 
             const query = {
+                card_id: cleanId,
                 name: card?.name,
                 card_series: card?.card_series,
                 card_number: card?.card_number,
-                card_id: id
+                card_type: card?.card_type
             };
 
             const response = await fetch(`${API_URL}/price-card`, {
@@ -105,19 +109,14 @@ const CardDetails = () => {
     };
 
     const viewPriceHistory = async () => {
-        router.push({
-            pathname: '/cards/[id]_price',
-            params: {
-                id: id
-            }
-        });
+        router.push(`/cards/${cleanId}/price`);
     };
 
     const saveCard = async () => {
         try {
             const newStatus = !isSaved;
 
-            const response = await fetch(`${API_URL}/card/${id}/save`, {
+            const response = await fetch(`${API_URL}/card/${cleanId}/save`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -157,9 +156,11 @@ const CardDetails = () => {
     const base_url = `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/`
 
     return (
-        <View>
+        <View className="flex-1 bg-black">
             {priceLoading ? (
-                <ActivityIndicator size="large" color="white" />
+                <View className="flex-1 justify-center items-center bg-black">
+                    <ActivityIndicator size="large" color="white" />
+                </View>
             ) : (
                 <SafeAreaView className="flex-1 bg-black">
                     <View className="flex-row items-center p-4 border-b border-gray-800">
@@ -192,7 +193,7 @@ const CardDetails = () => {
                             <DetailRow label="Type" value={card.card_type} />
                         </View>
 
-                        <View className="absolute bottom-10 left-0 right-0 p-4">
+                        <View className="absolute left-0 right-0 p-4">
                             <TouchableOpacity
                                 onPress={handlePrice}
                                 className="bg-green-600 w-full py-4 rounded-xl items-center shadow-lg"
