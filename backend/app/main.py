@@ -246,7 +246,7 @@ def price_card(req: PriceCardRequest):
     
     try:
         price = CardPrice(
-            card_info_id=req.card_id,
+            card_id=req.card_id,
             estimate=pricing["estimate"],
             low=pricing["price_low"],
             high=pricing["price_high"],
@@ -341,7 +341,7 @@ def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
     """
     trends = (
         db.query(CardPrice)
-        .filter(CardPrice.card_info_id == card_id)
+        .filter(CardPrice.card_id == card_id)
         .order_by(asc(CardPrice.created_at))  # Oldest first for the chart
         .all()
     )

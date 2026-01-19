@@ -6,7 +6,7 @@ def get_cards(db: Session, search_query: str = None, limit = 100):
     """Gets cards and front images from the database"""
     
     # Joins cards table with their front image s3_key
-    query = db.query(Card, CardImage.s3_key).join(CardImage, Card.id == CardImage.card_info_id)
+    query = db.query(Card, CardImage.s3_key).join(CardImage, Card.id == CardImage.card_id)
     
     # Filters front images only
     query = query.filter(CardImage.image_type == "front")

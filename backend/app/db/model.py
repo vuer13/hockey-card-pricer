@@ -1,7 +1,7 @@
 import uuid
-from sqlalchemy import Column, String, Float, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Float, Integer, DateTime, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, expression
 from .database import Base
 
 class Card(Base):
@@ -18,7 +18,7 @@ class Card(Base):
 class CardImage(Base):
     __tablename__ = 'card_image'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    card_info_id = Column(UUID(as_uuid=True), ForeignKey('card_info.id'), nullable=False)
+    card_id = Column(UUID(as_uuid=True), ForeignKey('card_info.id'), nullable=False)
     image_type = Column(String)  # e.g., 'front', 'back'
     s3_key = Column(String, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
@@ -26,7 +26,7 @@ class CardImage(Base):
 class CardPrice(Base):
     __tablename__ = 'card_price'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    card_info_id = Column(UUID(as_uuid=True), ForeignKey('card_info.id'), nullable=False)
+    card_id = Column(UUID(as_uuid=True), ForeignKey('card_info.id'), nullable=False)
     estimate = Column(Float)
     low = Column(Float)
     high = Column(Float)
