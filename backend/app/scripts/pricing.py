@@ -189,13 +189,12 @@ def compute_confidence(stats):
 def price_card(fields):
     """Takes confirmed card fields and returns a market estimate"""
     
-    print(fields)
     query = normalize_query(fields)
     
     if not query:
         return {"query": None, "error": "Invalid query"}
     
-    print(f"Searching eBay")
+    logger.info("Pricing request", extra={"fields": fields})
     result = cached_pricing(query)
     
     cache_info = cached_pricing.cache_info()
