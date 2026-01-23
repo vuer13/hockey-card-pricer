@@ -202,7 +202,8 @@ def price_card(fields):
         return {"query": query, "error": "Pricing empty"}
         
     return result
-    
+
+# Caching pricing to keep some info so API calls aren't as expensive
 @lru_cache(maxsize=256)
 def _cached_price_by_query(query: str):
     prices = get_sold_prices(query)
