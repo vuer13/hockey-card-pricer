@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
 import os
@@ -31,6 +32,16 @@ AWS_REGION = os.getenv("AWS_REGION")
 S3_BUCKET = os.getenv("S3_BUCKET")
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:19006",
+        "exp://*",                 
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 init_db()
 
@@ -44,10 +55,13 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 CROP_DIR = "uploads/crops"
 os.makedirs(CROP_DIR, exist_ok=True)
 
-# Loading models and ocr and pipelines
-yolo, model, ocr = load_models()
-pipeline_one = CardDetectionPipeline(yolo)
-pipeline_two = TextExtraction(model, ocr)
+@app.on_event("startup")
+def startup():
+    """Loads models up and all pipelines"""
+    global yolo, model, ocr, pipeline_one, pipeline_two
+    yolo, model, ocr = load_models()
+    pipeline_one = CardDetectionPipeline(yolo)
+    pipeline_two = TextExtraction(model, ocr)
     
 class ConfirmCardRequest(BaseModel):
     name: str
