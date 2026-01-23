@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import numpy as np
 import re
 import time
+from functools import lru_cache
 
 load_dotenv()
 
@@ -189,23 +190,30 @@ def price_card(fields):
     """Takes confirmed card fields and returns a market estimate"""
     
     print(fields)
-
     query = normalize_query(fields)
     
     if not query:
         return {"query": None, "error": "Invalid query"}
     
     print(f"Searching eBay")
+    result = _cached_price_by_query(query)
+    
+    if not result:
+        return {"query": query, "error": "Pricing empty"}
+        
+    return result
+    
+@lru_cache(maxsize=256)
+def _cached_price_by_query(query: str):
     prices = get_sold_prices(query)
     stats = estimate_price(prices)
-    
-    if not prices:
-        return {"query": query, "error": "No sales data found"}
-        
+
+    if not stats:
+        return None
+
     confidence = compute_confidence(stats)
 
     return {
-        "query": query,
         "estimate": stats["estimate"],
         "price_low": stats["low"],
         "price_high": stats["high"],
