@@ -6,16 +6,16 @@ import numpy as np
 import re
 import time
 from functools import lru_cache
+import logging
 
 load_dotenv()
+
+logger = logging.getLogger("pricing")
+logging.basicConfig(level=logging.INFO)
 
 MIN_SALES = 3
 MAX_RETRIES = 3
 BACKOFF_SECONDS = 1.5
-
-NOISE_TERMS = {
-    "psa", "bgs", "sgc", "gem", "mint", "graded", "rookie", "rc"
-}
 
 def get_ebay_token():
     """Authenticates with eBay and returns an OAuth access token to browse their API"""
@@ -80,7 +80,7 @@ def normalize_query(fields):
     
     query = re.sub(r"[^a-zA-Z0-9\-\s]", "", query)
     
-    print(f"Generated Query: {query}")
+    logger.info("Generated query", extra={"query": query})
     return query
 
 def get_sold_prices(query, limit=25):
@@ -173,7 +173,7 @@ def compute_confidence(stats):
     # Low reliability if few sales or wide price spread
     
     if not stats:
-        return {"query": query, "error": "Insufficient data"}
+        return 0.0
     
     n = stats["num_sales"]
     median = stats["estimate"]
@@ -196,24 +196,32 @@ def price_card(fields):
         return {"query": None, "error": "Invalid query"}
     
     print(f"Searching eBay")
-    result = _cached_price_by_query(query)
+    result = cached_pricing(query)
+    
+    cache_info = cached_pricing.cache_info()
+    
+    logger.info(
+        "pricing_cache",
+        extra={
+            "hits": cache_info.hits,
+            "misses": cache_info.misses,
+            "size": cache_info.currsize
+        }
+    )
     
     if not result:
         return {"query": query, "error": "Pricing empty"}
         
     return result
 
-# Caching pricing to keep some info so API calls aren't as expensive
-@lru_cache(maxsize=256)
-def _cached_price_by_query(query: str):
-    prices = get_sold_prices(query)
+def pricing_core(prices: list[float]):
     stats = estimate_price(prices)
-
+    
     if not stats:
         return None
-
+    
     confidence = compute_confidence(stats)
-
+    
     return {
         "estimate": stats["estimate"],
         "price_low": stats["low"],
@@ -221,6 +229,12 @@ def _cached_price_by_query(query: str):
         "confidence": confidence,
         "sales_count": stats["num_sales"]
     }
+
+# Caching pricing to keep some info so API calls aren't as expensive
+@lru_cache(maxsize=256)
+def cached_pricing(query: str):
+    prices = get_sold_prices(query)
+    return pricing_core(tuple(prices))
     
 def test():
     test_card = {
