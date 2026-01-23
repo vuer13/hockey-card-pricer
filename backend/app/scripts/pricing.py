@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 import numpy as np
 import re
+import time
 
 load_dotenv()
 
@@ -45,7 +46,8 @@ def get_ebay_token():
     response = requests.post(
         "https://api.ebay.com/identity/v1/oauth2/token",
         headers=headers,
-        data=data
+        data=data,
+        timeout=(3,8)
     )
 
     response.raise_for_status()
@@ -102,7 +104,7 @@ def get_sold_prices(query, limit=25):
     url = "https://api.ebay.com/buy/browse/v1/item_summary/search"
     
     for attempt in range(MAX_RETRIES):
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers, params=params, timeout=(3,10))
     
         # Handle API errors
         if response.status_code == 200:        
@@ -112,8 +114,10 @@ def get_sold_prices(query, limit=25):
             for item in data.get("itemSummaries", []):
                 price_obj = item.get("price", {})
                 price = price_obj.get("value")
-                if price:
+                try:
                     prices.append(float(price))
+                except (TypeError, ValueError):
+                    continue
                             
             return prices
         
