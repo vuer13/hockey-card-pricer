@@ -122,6 +122,7 @@ def get_sold_prices(query, limit=25):
                             
             return prices
         
+        logger.warning("ebay_failed", extra={"query": query, "attempt": attempt})
         time.sleep(BACKOFF_SECONDS * (attempt + 1))
         
     return []

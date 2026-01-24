@@ -25,6 +25,8 @@ from db.db_get import get_cards
 from db.init_db import init_db
 from db.schemas import TrendPoint
 
+import logging
+
 load_dotenv()
 
 # AWS Credentials from .env variables
@@ -44,6 +46,9 @@ app.add_middleware(
 )
 
 init_db()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("app")
 
 # TODO: Use AWS Storage instead of local; host models on S3
 
@@ -148,6 +153,7 @@ def confirm_card(req: ConfirmCardRequest):
     
     except Exception as e:
         db.rollback()
+        logger.error("db_error", exc_info=True)
         return err("DB_ERROR", str(e))
     finally:
         db.close()
@@ -274,6 +280,7 @@ def price_card(req: PriceCardRequest):
         db.commit()
     except Exception as e:
         db.rollback()
+        logger.error("db_error", exc_info=True)
         return err("DB_ERROR", str(e))
     finally:
         db.close()
@@ -407,6 +414,7 @@ def update_card_save(card_id, req: UpdateSaveRequest, db: Session = Depends(get_
         return ok({"id": str(card.id), "saved": card.saved})
     except Exception as e:
         db.rollback()
+        logger.error("db_error", exc_info=True)
         return err("DB_ERROR", str(e))
 
 # To ensure API is working
