@@ -45,8 +45,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-init_db()
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("app")
 
@@ -63,6 +61,7 @@ os.makedirs(CROP_DIR, exist_ok=True)
 @app.on_event("startup")
 def startup():
     """Loads models up and all pipelines"""
+    init_db()
     global yolo, model, ocr, pipeline_one, pipeline_two
     yolo, model, ocr = load_models()
     pipeline_one = CardDetectionPipeline(yolo)
@@ -421,3 +420,24 @@ def update_card_save(card_id, req: UpdateSaveRequest, db: Session = Depends(get_
 @app.get("/health-check")
 def health_check():
     return {"status": "ok"}
+
+# To check if system is useable
+@app.get("/ready")
+def ready():
+    try:
+        db = SessionLocal()
+        db.execute("SELECT 1")
+        db.close()
+        return {"status": "ready"}
+    except Exception:
+        return {"status": "not_ready"}
+
+# To check if middlware is working
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info("request_start", extra={
+        "path": request.url.path,
+        "method": request.method
+    })
+    response = await call_next(request)
+    return response
