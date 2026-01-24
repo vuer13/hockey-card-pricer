@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, Depends
+from fastapi import FastAPI, UploadFile, File, Form, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
@@ -57,6 +57,16 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # Temporary crop directory, will use properly stored crops later
 CROP_DIR = "uploads/crops"
 os.makedirs(CROP_DIR, exist_ok=True)
+
+# To check if middlware is working
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info("request_start", extra={
+        "path": request.url.path,
+        "method": request.method
+    })
+    response = await call_next(request)
+    return response
 
 @app.on_event("startup")
 def startup():
@@ -431,13 +441,3 @@ def ready():
         return {"status": "ready"}
     except Exception:
         return {"status": "not_ready"}
-
-# To check if middlware is working
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger.info("request_start", extra={
-        "path": request.url.path,
-        "method": request.method
-    })
-    response = await call_next(request)
-    return response
