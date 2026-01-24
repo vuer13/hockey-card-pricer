@@ -4,16 +4,18 @@ import os
 from dotenv import load_dotenv
 import numpy as np
 import re
+import time
+from functools import lru_cache
+import logging
 
 load_dotenv()
+
+logger = logging.getLogger("pricing")
+logging.basicConfig(level=logging.INFO)
 
 MIN_SALES = 3
 MAX_RETRIES = 3
 BACKOFF_SECONDS = 1.5
-
-NOISE_TERMS = {
-    "psa", "bgs", "sgc", "gem", "mint", "graded", "rookie", "rc"
-}
 
 def get_ebay_token():
     """Authenticates with eBay and returns an OAuth access token to browse their API"""
@@ -45,7 +47,8 @@ def get_ebay_token():
     response = requests.post(
         "https://api.ebay.com/identity/v1/oauth2/token",
         headers=headers,
-        data=data
+        data=data,
+        timeout=(3,8)
     )
 
     response.raise_for_status()
@@ -77,7 +80,7 @@ def normalize_query(fields):
     
     query = re.sub(r"[^a-zA-Z0-9\-\s]", "", query)
     
-    print(f"Generated Query: {query}")
+    logger.info("Generated query", extra={"query": query})
     return query
 
 def get_sold_prices(query, limit=25):
@@ -102,7 +105,7 @@ def get_sold_prices(query, limit=25):
     url = "https://api.ebay.com/buy/browse/v1/item_summary/search"
     
     for attempt in range(MAX_RETRIES):
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers, params=params, timeout=(3,10))
     
         # Handle API errors
         if response.status_code == 200:        
@@ -112,11 +115,14 @@ def get_sold_prices(query, limit=25):
             for item in data.get("itemSummaries", []):
                 price_obj = item.get("price", {})
                 price = price_obj.get("value")
-                if price:
+                try:
                     prices.append(float(price))
+                except (TypeError, ValueError):
+                    continue
                             
             return prices
         
+        logger.warning("ebay_failed", extra={"query": query, "attempt": attempt})
         time.sleep(BACKOFF_SECONDS * (attempt + 1))
         
     return []
@@ -168,7 +174,7 @@ def compute_confidence(stats):
     # Low reliability if few sales or wide price spread
     
     if not stats:
-        return {"query": query, "error": "Insufficient data"}
+        return 0.0
     
     n = stats["num_sales"]
     median = stats["estimate"]
@@ -184,30 +190,51 @@ def compute_confidence(stats):
 def price_card(fields):
     """Takes confirmed card fields and returns a market estimate"""
     
-    print(fields)
-
     query = normalize_query(fields)
     
     if not query:
         return {"query": None, "error": "Invalid query"}
     
-    print(f"Searching eBay")
-    prices = get_sold_prices(query)
+    logger.info("Pricing request", extra={"fields": fields})
+    result = cached_pricing(query)
+    
+    cache_info = cached_pricing.cache_info()
+    
+    logger.info(
+        "pricing_cache",
+        extra={
+            "hits": cache_info.hits,
+            "misses": cache_info.misses,
+            "size": cache_info.currsize
+        }
+    )
+    
+    if not result:
+        return {"query": query, "error": "Pricing empty"}
+        
+    return result
+
+def pricing_core(prices: list[float]):
     stats = estimate_price(prices)
     
-    if not prices:
-        return {"query": query, "error": "No sales data found"}
-        
+    if not stats:
+        return None
+    
     confidence = compute_confidence(stats)
-
+    
     return {
-        "query": query,
         "estimate": stats["estimate"],
         "price_low": stats["low"],
         "price_high": stats["high"],
         "confidence": confidence,
         "sales_count": stats["num_sales"]
     }
+
+# Caching pricing to keep some info so API calls aren't as expensive
+@lru_cache(maxsize=256)
+def cached_pricing(query: str):
+    prices = get_sold_prices(query)
+    return pricing_core(tuple(prices))
     
 def test():
     test_card = {

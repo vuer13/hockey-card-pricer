@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, Depends
+from fastapi import FastAPI, UploadFile, File, Form, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
@@ -25,6 +25,8 @@ from db.db_get import get_cards
 from db.init_db import init_db
 from db.schemas import TrendPoint
 
+import logging
+
 load_dotenv()
 
 # AWS Credentials from .env variables
@@ -43,7 +45,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-init_db()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("app")
 
 # TODO: Use AWS Storage instead of local; host models on S3
 
@@ -55,9 +58,20 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 CROP_DIR = "uploads/crops"
 os.makedirs(CROP_DIR, exist_ok=True)
 
+# To check if middlware is working
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info("request_start", extra={
+        "path": request.url.path,
+        "method": request.method
+    })
+    response = await call_next(request)
+    return response
+
 @app.on_event("startup")
 def startup():
     """Loads models up and all pipelines"""
+    init_db()
     global yolo, model, ocr, pipeline_one, pipeline_two
     yolo, model, ocr = load_models()
     pipeline_one = CardDetectionPipeline(yolo)
@@ -148,6 +162,7 @@ def confirm_card(req: ConfirmCardRequest):
     
     except Exception as e:
         db.rollback()
+        logger.error("db_error", exc_info=True)
         return err("DB_ERROR", str(e))
     finally:
         db.close()
@@ -274,6 +289,7 @@ def price_card(req: PriceCardRequest):
         db.commit()
     except Exception as e:
         db.rollback()
+        logger.error("db_error", exc_info=True)
         return err("DB_ERROR", str(e))
     finally:
         db.close()
@@ -407,9 +423,21 @@ def update_card_save(card_id, req: UpdateSaveRequest, db: Session = Depends(get_
         return ok({"id": str(card.id), "saved": card.saved})
     except Exception as e:
         db.rollback()
+        logger.error("db_error", exc_info=True)
         return err("DB_ERROR", str(e))
 
 # To ensure API is working
 @app.get("/health-check")
 def health_check():
     return {"status": "ok"}
+
+# To check if system is useable
+@app.get("/ready")
+def ready():
+    try:
+        db = SessionLocal()
+        db.execute("SELECT 1")
+        db.close()
+        return {"status": "ready"}
+    except Exception:
+        return {"status": "not_ready"}
