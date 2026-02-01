@@ -316,7 +316,7 @@ def get_card(card_id: str, user = Depends(current_user)):
     
     db = SessionLocal()
     try:
-        card = db.query(Card).filter(CardPrice.card_id == card_id).filter(Card.user_id == user["user_id"]).first()
+        card = db.query(Card).filter(Card.id == card_id).filter(Card.user_id == user["user_id"]).first()
         
         if not card:
             return err("INVALID_INPUT", "Not found")    

@@ -7,6 +7,7 @@ from .database import Base
 class Card(Base):
     __tablename__ = 'card_info'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
     name = Column(String, nullable=False)
     card_series = Column(String, nullable=False)
     card_number = Column(String, nullable=False)
