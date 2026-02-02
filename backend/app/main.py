@@ -118,14 +118,12 @@ def get_db():
         db.close()
 
 @app.post("/confirm-card")
-def confirm_card(req: ConfirmCardRequest, user = Depends(current_user)):
+def confirm_card(req: ConfirmCardRequest, db: Session = Depends(get_db) ,user = Depends(current_user)):
     """Endpoint to confirm card details and store in DB"""
     
     if not req.name or not req.card_series or not req.card_number:
         return err("INVALID_INPUT", "Missing required fields")
-    
-    db = SessionLocal()
-    
+        
     try:
         # Card Information
         card = Card(
@@ -172,7 +170,7 @@ def confirm_card(req: ConfirmCardRequest, user = Depends(current_user)):
 
 
 @app.post("/extract-text")
-def extract_text(file: UploadFile = File(...)):
+def extract_text(file: UploadFile = File(...), user = Depends(current_user)):
     """Extracts text from a cropped card image"""
     
     # Save temp image
@@ -198,7 +196,7 @@ def extract_text(file: UploadFile = File(...)):
 
 # Endpoint handles upload + detection
 @app.post('/detect-card')
-def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
+def detect_card(file: UploadFile = File(...), image_type: str = Form(...), user = Depends(current_user)):
     """Receives an image and detects card in it"""
     
     if image_type is None or image_type not in ["front", "back"]:
@@ -262,7 +260,7 @@ def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
         return err("PROCESSING_ERROR", str(e))
     
 @app.post('/price-card')
-def price_card(req: PriceCardRequest, user = Depends(current_user)):
+def price_card(req: PriceCardRequest, db: Session = Depends(get_db), user = Depends(current_user)):
     """Prices a card based on its details"""
     
     pricing_input = {
@@ -275,9 +273,7 @@ def price_card(req: PriceCardRequest, user = Depends(current_user)):
     
     if "estimate" not in pricing:
         return err("PRICING_NO_DATA", "Unable to price card with given details")
-    
-    db = SessionLocal()
-    
+        
     try:
         card = (
             db.query(Card)
@@ -311,10 +307,9 @@ def price_card(req: PriceCardRequest, user = Depends(current_user)):
 
 # Read endpoints
 @app.get("/card/{card_id}")
-def get_card(card_id: str, user = Depends(current_user)):
+def get_card(card_id: str, db: Session = Depends(get_db), user = Depends(current_user)):
     """Fetches card details by ID (PK)"""
     
-    db = SessionLocal()
     try:
         card = db.query(Card).filter(Card.id == card_id).filter(Card.user_id == user["user_id"]).first()
         
@@ -342,10 +337,9 @@ def get_card(card_id: str, user = Depends(current_user)):
         db.close()
 
 @app.get("/card/{card_id}/prices")
-def get_prices(card_id: str, user = Depends(current_user)):
+def get_prices(card_id: str, db: Session = Depends(get_db), user = Depends(current_user)):
     """Fetches card pricing details by Card ID (FK)"""
     
-    db = SessionLocal()
     prices = db.query(CardPrice).join(Card).filter(CardPrice.card_id == card_id).filter(Card.user_id == user["user_id"]).all()
     
     db.close()
