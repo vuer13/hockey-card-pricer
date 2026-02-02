@@ -9,9 +9,14 @@ export default function SignUp() {
 
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
+    const [confirmPassword, setConfirmPassword] = React.useState('');
     const [error, setError] = React.useState<string | null>(null);
 
     const handleSignup = async () => {
+        if (password !== confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
         const { error } = await signUpWithEmail(email, password);
         if (error) {
             setError(error.message);
@@ -24,6 +29,7 @@ export default function SignUp() {
         <View>
             <TextInput placeholder="Email" onChangeText={setEmail} />
             <TextInput placeholder="Password" secureTextEntry onChangeText={setPassword} />
+            <TextInput placeholder="Confirm Password" secureTextEntry onChangeText={setConfirmPassword} />
             {error && <Text>{error}</Text>}
             <Button title="Create account" onPress={handleSignup} />
         </View>
