@@ -2,6 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { apiFetch } from '@/lib/api';
 
 const verify_text = () => {
     const router = useRouter();
@@ -32,7 +33,7 @@ const verify_text = () => {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // POST request to confirm card details
-            const response = await fetch(`${API_URL}/confirm-card`, {
+            const response = await apiFetch(`${API_URL}/confirm-card`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

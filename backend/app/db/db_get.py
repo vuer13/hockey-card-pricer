@@ -2,11 +2,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from .model import Card, CardImage
 
-def get_cards(db: Session, search_query: str = None, limit = 100):
+def get_cards(db: Session, search_query: str = None, user_id, limit = 100):
     """Gets cards and front images from the database"""
     
-    # Joins cards table with their front image s3_key
-    query = db.query(Card, CardImage.s3_key).join(CardImage, Card.id == CardImage.card_id)
+    # Joins cards table with their front image s3_key and filter by user id
+    query = db.query(Card, CardImage.s3_key).join(CardImage, Card.id == CardImage.card_id).filter(Card.user_id == user_id)
     
     # Filters front images only
     query = query.filter(CardImage.image_type == "front")

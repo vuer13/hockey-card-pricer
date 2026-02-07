@@ -25,6 +25,8 @@ from db.db_get import get_cards
 from db.init_db import init_db
 from db.schemas import TrendPoint
 
+from utils.auth import current_user
+
 import logging
 
 load_dotenv()
@@ -116,14 +118,12 @@ def get_db():
         db.close()
 
 @app.post("/confirm-card")
-def confirm_card(req: ConfirmCardRequest):
+def confirm_card(req: ConfirmCardRequest, db: Session = Depends(get_db), user = Depends(current_user)):
     """Endpoint to confirm card details and store in DB"""
     
     if not req.name or not req.card_series or not req.card_number:
         return err("INVALID_INPUT", "Missing required fields")
-    
-    db = SessionLocal()
-    
+        
     try:
         # Card Information
         card = Card(
@@ -131,7 +131,8 @@ def confirm_card(req: ConfirmCardRequest):
             card_series=req.card_series,
             card_number=req.card_number,
             team_name=req.team_name,
-            card_type=req.card_type if req.card_type else "Base"
+            card_type=req.card_type if req.card_type else "Base",
+            user_id=user["user_id"]
         )
         
         # Adding Card to DB
@@ -169,7 +170,7 @@ def confirm_card(req: ConfirmCardRequest):
 
 
 @app.post("/extract-text")
-def extract_text(file: UploadFile = File(...)):
+def extract_text(file: UploadFile = File(...), user = Depends(current_user)):
     """Extracts text from a cropped card image"""
     
     # Save temp image
@@ -195,7 +196,7 @@ def extract_text(file: UploadFile = File(...)):
 
 # Endpoint handles upload + detection
 @app.post('/detect-card')
-def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
+def detect_card(file: UploadFile = File(...), image_type: str = Form(...), user = Depends(current_user)):
     """Receives an image and detects card in it"""
     
     if image_type is None or image_type not in ["front", "back"]:
@@ -259,7 +260,7 @@ def detect_card(file: UploadFile = File(...), image_type: str = Form(...)):
         return err("PROCESSING_ERROR", str(e))
     
 @app.post('/price-card')
-def price_card(req: PriceCardRequest):
+def price_card(req: PriceCardRequest, db: Session = Depends(get_db), user = Depends(current_user)):
     """Prices a card based on its details"""
     
     pricing_input = {
@@ -272,10 +273,18 @@ def price_card(req: PriceCardRequest):
     
     if "estimate" not in pricing:
         return err("PRICING_NO_DATA", "Unable to price card with given details")
-    
-    db = SessionLocal()
-    
+        
     try:
+        card = (
+            db.query(Card)
+            .filter(Card.id == req.card_id)
+            .filter(Card.user_id == user["user_id"])
+            .first()
+        )
+        
+        if not card:
+            return err("FORBIDDEN", "Card does not belong to user")
+        
         price = CardPrice(
             card_id=req.card_id,
             estimate=pricing["estimate"],
@@ -298,12 +307,11 @@ def price_card(req: PriceCardRequest):
 
 # Read endpoints
 @app.get("/card/{card_id}")
-def get_card(card_id: str):
+def get_card(card_id: str, db: Session = Depends(get_db), user = Depends(current_user)):
     """Fetches card details by ID (PK)"""
     
-    db = SessionLocal()
     try:
-        card = db.query(Card).get(card_id)
+        card = db.query(Card).filter(Card.id == card_id).filter(Card.user_id == user["user_id"]).first()
         
         if not card:
             return err("INVALID_INPUT", "Not found")    
@@ -329,11 +337,10 @@ def get_card(card_id: str):
         db.close()
 
 @app.get("/card/{card_id}/prices")
-def get_prices(card_id: str):
+def get_prices(card_id: str, db: Session = Depends(get_db), user = Depends(current_user)):
     """Fetches card pricing details by Card ID (FK)"""
     
-    db = SessionLocal()
-    prices = db.query(CardPrice).filter(CardPrice.card_id == card_id).all()
+    prices = db.query(CardPrice).join(Card).filter(CardPrice.card_id == card_id).filter(Card.user_id == user["user_id"]).all()
     
     db.close()
     return ok([{
@@ -345,8 +352,8 @@ def get_prices(card_id: str):
     } for p in prices]) if prices else err("NOT_FOUND", "No prices found")
     
 @app.get("/cards")
-def read_cards(q: str = None, db: Session = Depends(get_db)):
-    results = get_cards(db, q)
+def read_cards(q: str = None, db: Session = Depends(get_db), user = Depends(current_user)):
+    results = get_cards(db, q, user["user_id"])
 
     formatted_cards = []
     
@@ -367,13 +374,15 @@ def read_cards(q: str = None, db: Session = Depends(get_db)):
     return ok(formatted_cards)
 
 @app.get("/card/{card_id}/price-trend", response_model=List[TrendPoint])
-def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
+def get_price_trend(card_id: UUID, db: Session = Depends(get_db), user = Depends(current_user)):
     """
     Fetches price history sorted by date 
     """
     trends = (
         db.query(CardPrice)
+        .join(Card)
         .filter(CardPrice.card_id == card_id)
+        .filter(Card.user_id == user["user_id"])
         .order_by(asc(CardPrice.created_at))  # Oldest first for the chart
         .all()
     )
@@ -381,10 +390,10 @@ def get_price_trend(card_id: UUID, db: Session = Depends(get_db)):
     return trends # For response_model above, no ok
 
 @app.get("/saved-cards")
-def get_saved_cards(db: Session = Depends(get_db)):
+def get_saved_cards(db: Session = Depends(get_db), user = Depends(current_user)):
     """Returns all cards that are "saved" """
     
-    cards = db.query(Card).filter(Card.saved == True).order_by(Card.created_at.desc()).all()
+    cards = db.query(Card).filter(Card.saved == True).filter(Card.user_id == user["user_id"]).order_by(Card.created_at.desc()).all()
     
     formatted_cards = []
     base_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/"
@@ -407,10 +416,10 @@ def get_saved_cards(db: Session = Depends(get_db)):
     return ok(formatted_cards)
 
 @app.put("/card/{card_id}/save")
-def update_card_save(card_id, req: UpdateSaveRequest, db: Session = Depends(get_db)):
+def update_card_save(card_id, req: UpdateSaveRequest, db: Session = Depends(get_db), user = Depends(current_user)):
     """ Updates save status of a card """
     try:
-        card = db.query(Card).filter(Card.id == card_id).first()
+        card = db.query(Card).filter(Card.id == card_id).filter(Card.user_id == user["user_id"]).first()
         
         if not card:
             return err("NOT_FOUND", "Card not found")

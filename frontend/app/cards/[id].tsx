@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import saved from '../(tabs)/saved';
+import { apiFetch } from '@/lib/api';
 
 type CardData = {
     id: string;
@@ -53,7 +54,7 @@ const CardDetails = () => {
         try {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
-            const response = await fetch(`${API_URL}/card/${cleanId}`);
+            const response = await apiFetch(`${API_URL}/card/${cleanId}`);
             const json = await response.json();
 
             if (json.status === 'ok') {
@@ -82,7 +83,7 @@ const CardDetails = () => {
                 card_type: card?.card_type
             };
 
-            const response = await fetch(`${API_URL}/price-card`, {
+            const response = await apiFetch(`${API_URL}/price-card`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -116,7 +117,7 @@ const CardDetails = () => {
         try {
             const newStatus = !isSaved;
 
-            const response = await fetch(`${API_URL}/card/${cleanId}/save`, {
+            const response = await apiFetch(`${API_URL}/card/${cleanId}/save`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
