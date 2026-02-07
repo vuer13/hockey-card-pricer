@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react'
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { images } from "@/constants/images";
+import { apiFetch } from '@/lib/api';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
@@ -48,7 +49,7 @@ const Saved = () => {
     const fetchSavedCards = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${API_BASE}/saved-cards`);
+            const response = await apiFetch(`${API_BASE}/saved-cards`);
             const json = await response.json();
 
             if (json.status === 'ok') {

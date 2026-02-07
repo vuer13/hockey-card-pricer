@@ -2,6 +2,7 @@ import { View, Text, Alert, TouchableOpacity, Image, ActivityIndicator } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { apiFetch } from '@/lib/api';
 
 const staging = () => {
     const router = useRouter();
@@ -73,7 +74,7 @@ const staging = () => {
 
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
-            const response = await fetch(`${API_URL}/extract-text`, {
+            const response = await apiFetch(`${API_URL}/extract-text`, {
                 method: 'POST',
                 body: formData
             });

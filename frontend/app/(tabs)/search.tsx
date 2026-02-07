@@ -4,6 +4,7 @@ import { Image, View, Text, ActivityIndicator, FlatList, TouchableOpacity } from
 import SearchBar from "@/components/SearchBar";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
@@ -48,7 +49,7 @@ export default function Index() {
 
     const fetchCards = async () => {
         try {
-            const response = await fetch(`${API_BASE}/cards?limit=30`);
+            const response = await apiFetch(`${API_BASE}/cards?limit=30`);
             const data = await response.json();
             console.log("RAW RESPONSE:", data);
             if (data.status === 'ok') {

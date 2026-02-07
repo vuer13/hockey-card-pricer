@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { ActivityIndicator, Dimensions, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from "react-native-chart-kit"
+import { apiFetch } from '@/lib/api';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -42,7 +43,7 @@ const PriceDetails = () => {
 
             const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
-            const response = await fetch(`${API_BASE}/card/${cardId}/price-trend`);
+            const response = await apiFetch(`${API_BASE}/card/${cardId}/price-trend`);
 
             if (response.ok) {
                 const json = await response.json();

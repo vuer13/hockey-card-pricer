@@ -48,7 +48,7 @@ const _layout = () => {
                 }
             }}
         >
-        {/* Hides index header route */}
+            {/* Hides index header route */}
             <Tabs.Screen
                 name="index"
                 options={{

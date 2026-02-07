@@ -118,7 +118,7 @@ def get_db():
         db.close()
 
 @app.post("/confirm-card")
-def confirm_card(req: ConfirmCardRequest, db: Session = Depends(get_db) ,user = Depends(current_user)):
+def confirm_card(req: ConfirmCardRequest, db: Session = Depends(get_db), user = Depends(current_user)):
     """Endpoint to confirm card details and store in DB"""
     
     if not req.name or not req.card_series or not req.card_number:

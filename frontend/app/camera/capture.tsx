@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { apiFetch } from '@/lib/api';
 
 export default function capture() {
     const router = useRouter();
@@ -66,7 +67,7 @@ export default function capture() {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // Send to backend
-            const response = await fetch(`${API_URL}/detect-card`, {
+            const response = await apiFetch(`${API_URL}/detect-card`, {
                 method: 'POST',
                 body: formData
             });
