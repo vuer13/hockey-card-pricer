@@ -1,7 +1,7 @@
 import { signUpWithEmail } from '@/auth/supabase';
 import { useRouter } from 'expo-router';
 import React from 'react'
-import { Button, TextInput, View } from 'react-native';
+import { Button, Pressable, TextInput, View } from 'react-native';
 import { Text } from 'react-native-svg';
 
 export default function SignUp() {
@@ -26,12 +26,46 @@ export default function SignUp() {
     };
 
     return (
-        <View>
-            <TextInput placeholder="Email" onChangeText={setEmail} />
-            <TextInput placeholder="Password" secureTextEntry onChangeText={setPassword} />
-            <TextInput placeholder="Confirm Password" secureTextEntry onChangeText={setConfirmPassword} />
-            {error && <Text>{error}</Text>}
-            <Button title="Create account" onPress={handleSignup} />
+        <View className="flex-1 justify-center items-center px-6">
+            <View className="w-full max-w-md">
+                <Text>
+                    Create Account
+                </Text>
+
+                <TextInput
+                    placeholder="Email"
+                    autoCapitalize="none"
+                    onChangeText={setEmail}
+                    className="border rounded px-3 py-2 mb-4"
+                />
+
+                <TextInput
+                    placeholder="Password"
+                    secureTextEntry
+                    onChangeText={setPassword}
+                    className="border rounded px-3 py-2 mb-4"
+                />
+
+                <TextInput
+                    placeholder="Confirm Password"
+                    secureTextEntry
+                    onChangeText={setConfirmPassword}
+                    className="border rounded px-3 py-2 mb-4"
+                />
+
+                {error ? (
+                    <Text>
+                        {error}
+                    </Text>
+                ) : null}
+
+                <Pressable
+                    onPress={handleSignup}
+                    className="border rounded py-2 items-center"
+                >
+                    <Text>Create account</Text>
+                </Pressable>
+            </View>
         </View>
     );
 }
