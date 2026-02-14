@@ -33,7 +33,7 @@ const verify_text = () => {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // POST request to confirm card details
-            const response = await apiFetch(`${API_URL}/confirm-card`, {
+            const response = await apiFetch(`/confirm-card`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

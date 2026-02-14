@@ -74,7 +74,7 @@ const staging = () => {
 
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
-            const response = await apiFetch(`${API_URL}/extract-text`, {
+            const response = await apiFetch(`/extract-text`, {
                 method: 'POST',
                 body: formData
             });

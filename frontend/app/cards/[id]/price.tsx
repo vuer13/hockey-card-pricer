@@ -43,7 +43,7 @@ const PriceDetails = () => {
 
             const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
-            const response = await apiFetch(`${API_BASE}/card/${cardId}/price-trend`);
+            const response = await apiFetch(`/card/${cardId}/price-trend`);
 
             if (response.ok) {
                 const json = await response.json();

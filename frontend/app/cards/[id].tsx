@@ -54,7 +54,7 @@ const CardDetails = () => {
         try {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
-            const response = await apiFetch(`${API_URL}/card/${cleanId}`);
+            const response = await apiFetch(`/card/${cleanId}`);
             const json = await response.json();
 
             if (json.status === 'ok') {
@@ -83,7 +83,7 @@ const CardDetails = () => {
                 card_type: card?.card_type
             };
 
-            const response = await apiFetch(`${API_URL}/price-card`, {
+            const response = await apiFetch(`/price-card`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -117,7 +117,7 @@ const CardDetails = () => {
         try {
             const newStatus = !isSaved;
 
-            const response = await apiFetch(`${API_URL}/card/${cleanId}/save`, {
+            const response = await apiFetch(`/card/${cleanId}/save`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

@@ -49,7 +49,7 @@ const Saved = () => {
     const fetchSavedCards = async () => {
         try {
             setLoading(true);
-            const response = await apiFetch(`${API_BASE}/saved-cards`);
+            const response = await apiFetch(`/saved-cards`);
             const json = await response.json();
 
             if (json.status === 'ok') {

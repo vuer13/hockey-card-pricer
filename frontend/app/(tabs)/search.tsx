@@ -49,7 +49,7 @@ export default function Index() {
 
     const fetchCards = async () => {
         try {
-            const response = await apiFetch(`${API_BASE}/cards?limit=30`);
+            const response = await apiFetch(`/cards?limit=30`);
             const data = await response.json();
             console.log("RAW RESPONSE:", data);
             if (data.status === 'ok') {

@@ -409,7 +409,7 @@ def get_saved_cards(db: Session = Depends(get_db), user = Depends(current_user))
             "image": f"{base_url}{front_key}" if front_key else None,
             "saved": card.saved
         })
-        
+            
     return ok(formatted_cards)
 
 @app.put("/card/{card_id}/save")
