@@ -25,7 +25,7 @@ from db.db_get import get_cards
 from db.init_db import init_db
 from db.schemas import TrendPoint
 
-from utils.auth import current_user
+from auth.supabase_auth import current_user
 
 import logging
 
@@ -38,10 +38,7 @@ S3_BUCKET = os.getenv("S3_BUCKET")
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:19006",
-        "exp://*",                 
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

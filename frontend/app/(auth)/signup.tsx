@@ -1,8 +1,7 @@
 import { signUpWithEmail } from '@/auth/supabase';
 import { useRouter } from 'expo-router';
 import React from 'react'
-import { Button, Pressable, TextInput, View } from 'react-native';
-import { Text } from 'react-native-svg';
+import { Pressable, TextInput, View, Text } from 'react-native';
 
 export default function SignUp() {
     const router = useRouter();
