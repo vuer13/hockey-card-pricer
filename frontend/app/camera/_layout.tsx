@@ -6,7 +6,17 @@ const _layout = () => {
         <Stack>
             <Stack.Screen
                 name="capture"
-                options={{ headerShown: false, }}
+                options={{ headerShown: false, gestureEnabled: false }}
+            />
+
+            <Stack.Screen
+                name="staging"
+                options={{ headerShown: false, gestureEnabled: false }}
+            />
+
+            <Stack.Screen
+                name="confirm"
+                options={{ headerShown: false, gestureEnabled: false }}
             />
         </Stack>
     )
