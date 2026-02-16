@@ -350,7 +350,11 @@ def get_prices(card_id: str, db: Session = Depends(get_db), user = Depends(curre
     
 @app.get("/cards")
 def read_cards(q: str = None, db: Session = Depends(get_db), user = Depends(current_user)):
-    results = get_cards(db, q, user["user_id"])
+    results = get_cards(
+        db=db,
+        user_id=user["user_id"],
+        search_query=q
+    )
 
     formatted_cards = []
     
