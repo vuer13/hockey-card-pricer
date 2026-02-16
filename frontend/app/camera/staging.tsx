@@ -156,7 +156,13 @@ const staging = () => {
     return (
         <View className="flex-1 bg-background px-6 pt-6">
             {loading ? (
-                <ActivityIndicator size="large" color="#1E40AF" />
+                <View className="flex-1 bg-background justify-center items-center">
+                    <ActivityIndicator size="large" color="#1E40AF" />
+
+                    <Text className="text-primary text-lg font-semibold mt-6">
+                        Analyzing...
+                    </Text>
+                </View>
             ) : (
                 <SafeAreaView className="flex-1 justify-center">
                     <Text className="text-primary text-4xl font-bold text-center mb-8">

@@ -15,6 +15,7 @@ const SearchBar = ({ placeholder, onPress, onChangeText, value }: Props) => {
             <Image source={icons.search} className='size-5' resizeMode='contain' tintColor='#ab8bff' />
             <TextInput
                 onPress={onPress}
+                style={{ textAlignVertical: "center" }}
                 placeholder={placeholder}
                 value={value}
                 onChangeText={onChangeText}
