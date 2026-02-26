@@ -62,44 +62,53 @@ export default function Index() {
         }
     };
 
-    const filteredCards = query 
+    const filteredCards = query
         ? (cards || []).filter(card =>
             (card.name?.toLowerCase() || '').includes(query.toLowerCase()) ||
             (card.team_name?.toLowerCase() || '').includes(query.toLowerCase()) ||
             (card.card_number?.toString().toLowerCase() || '').includes(query.toLowerCase())
-          )
+        )
         : cards; // Return all cards if query is empty
 
     return (
-        <View className="flex-1 bg-primary">
-            <Image source={images.bg} className="absolute w-full z-0" />
-
+        <View className="flex-1 bg-background">
             {loading ? (
                 <View className="flex-1 justify-center items-center">
-                    <ActivityIndicator size="large" color="#ffffff" />
+                    <ActivityIndicator size="large" color="#1E40AF" />
                 </View>
             ) : (
                 <FlatList
                     data={filteredCards}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => router.push(`/cards/${item.id}`)}>
+                        <TouchableOpacity
+                            onPress={() => router.push(`/cards/${item.id}`)}
+                            className="mb-6"
+                        >
                             <CardItem item={item} />
                         </TouchableOpacity>
                     )}
-                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+                    contentContainerStyle={{
+                        paddingHorizontal: 24,
+                        paddingBottom: 100,
+                        paddingTop: 40
+                    }}
                     showsVerticalScrollIndicator={false}
                     keyboardDismissMode="on-drag"
                     keyboardShouldPersistTaps="handled"
                     ListHeaderComponent={() => (
-                        <View className="mb-6">
-                            <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto" />
+                        <View className="mb-8">
+                            <Image
+                                source={icons.logo}
+                                className="w-12 h-10 mb-6 mx-auto"
+                                resizeMode="contain"
+                            />
                             <SearchBar
                                 value={query}
                                 onChangeText={(text: string) => setQuery(text)}
-                                placeholder="Search for cards with name, team name or card series"
+                                placeholder="Search by player, team, or series"
                             />
-                            <Text className="text-white text-2xl font-bold mt-8">
+                            <Text className="text-primary text-2xl font-bold mt-8">
                                 {query ? "Search Results" : "Your Latest Cards"}
                             </Text>
                         </View>

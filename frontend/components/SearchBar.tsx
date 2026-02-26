@@ -11,16 +11,21 @@ interface Props {
 
 const SearchBar = ({ placeholder, onPress, onChangeText, value }: Props) => {
     return (
-        <View className='flex-row items-center bg-dark-200 rounded-full px-5 py-4'>
-            <Image source={icons.search} className='size-5' resizeMode='contain' tintColor='#ab8bff' />
+        <View className="flex-row items-center bg-white rounded-2xl px-5 py-4 border border-border">
+            <Image
+                source={icons.search}
+                className="w-5 h-5"
+                resizeMode="contain"
+                tintColor="#1E40AF"
+            />
             <TextInput
                 onPress={onPress}
                 style={{ textAlignVertical: "center" }}
                 placeholder={placeholder}
                 value={value}
                 onChangeText={onChangeText}
-                placeholderTextColor="#a8b5db"
-                className='flex-1 ml-2 text-white'
+                placeholderTextColor="#9CA3AF"
+                className="flex-1 ml-3 text-black text-base"
                 editable={!onPress}
             />
         </View>

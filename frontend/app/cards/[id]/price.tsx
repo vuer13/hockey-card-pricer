@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, Dimensions, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Dimensions, FlatList, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from "react-native-chart-kit"
 import { apiFetch } from '@/lib/api';
@@ -85,85 +85,101 @@ const PriceDetails = () => {
     };
 
     const renderItem = ({ item }: { item: PricePoint }) => (
-        <View className="flex-row justify-between items-center p-4 bg-gray-900 mb-2 rounded-xl mx-4 border border-gray-800">
+        <View className="flex-row justify-between items-center p-5 bg-white mb-3 rounded-2xl mx-6 border border-border shadow-sm">
             <View>
-                <Text className="text-white font-bold text-lg">
-                    Price: ${item.estimate.toFixed(2)}
+                <Text className="text-primary font-bold text-lg">
+                    ${item.estimate.toFixed(2)}
                 </Text>
-                <Text className="text-gray-400 text-xs">
-                    Price Low: ${item.low}
+                <Text className="text-dark-200 text-xs">
+                    Low: ${item.low}
                 </Text>
-                <Text className="text-gray-400 text-xs">
-                    Price High: ${item.high}
+                <Text className="text-dark-200 text-xs">
+                    High: ${item.high}
                 </Text>
             </View>
             <View className="items-end">
-                <Text className="text-gray-400 text-xs">
+                <Text className="text-dark-200 text-xs">
                     {new Date(item.created_at).toLocaleDateString()}
                 </Text>
-                <Text className="text-gray-500 text-[10px]">
-                    {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <Text className="text-gray-400 text-[10px]">
+                    {new Date(item.created_at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}
                 </Text>
             </View>
         </View>
     );
 
     return (
-        <View className="flex-1 bg-black">
-            <SafeAreaView className='flex-1'>
-                <View className="flex-row items-center p-4 border-b border-gray-800">
+        <View className="flex-1 bg-background">
+            <SafeAreaView className="flex-1">
+                <View className="flex-row items-center px-6 py-4 border-b border-border bg-white">
                     <TouchableOpacity onPress={() => router.back()} className="mr-4">
-                        <Ionicons name="arrow-back" size={24} color="white" />
+                        <Ionicons name="arrow-back" size={24} color="#1E40AF" />
                     </TouchableOpacity>
-                    <Text className="text-white text-xl font-bold">Price Trends</Text>
+                    <Text className="text-primary text-xl font-bold">
+                        Price Trends
+                    </Text>
                 </View>
-
                 {loading ? (
                     <View className="flex-1 justify-center items-center">
-                        <ActivityIndicator size="large" color="#16a34a" />
-                        <Text className="text-gray-500 mt-4">Loading market data...</Text>
+                        <ActivityIndicator size="large" color="#1E40AF" />
+                        <Text className="text-dark-200 mt-4">
+                            Loading market data...
+                        </Text>
                     </View>
                 ) : (
-                    <View className='flex-1'>
-                        <View className="items-center py-6 border-b border-gray-800 mb-4">
-                            <Text className="text-gray-400 mb-4 text-xs uppercase tracking-widest">
-                                Valuation History
-                            </Text>
+                    <FlatList
+                        data={history}
+                        keyExtractor={(item, index) => `${item.created_at}-${index}`}
+                        renderItem={renderItem}
+                        contentContainerStyle={{ paddingBottom: 100 }}
+                        ListHeaderComponent={() => (
+                            <View className="px-6 py-6 border-b border-border mb-4">
+                                <Text className="text-dark-200 mb-4 text-xs uppercase tracking-widest">
+                                    Valuation History
+                                </Text>
 
-                            {chartData ? (
-                                <LineChart
-                                    data={chartData}
-                                    width={screenWidth - 20}
-                                    height={220}
-                                    yAxisLabel="$"
-                                    yAxisInterval={1}
-                                    chartConfig={{
-                                        backgroundColor: "#ffffff",
-                                        backgroundGradientFrom: "#ffffff",
-                                        backgroundGradientTo: "#ffffff",
-                                        decimalPlaces: 2,
-                                        color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
-                                        labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                                        style: { borderRadius: 16 },
-                                        propsForDots: {
-                                            r: "4",
-                                            strokeWidth: "2",
-                                            stroke: "#16a34a"
-                                        }
-                                    }}
-                                    bezier
-                                    style={{ borderRadius: 16 }}
-                                />
-                            ) : (
-                                <View className="h-48 justify-center">
-                                    <Text className="text-gray-500">Not enough data for chart</Text>
-                                </View>
-                            )}
-                        </View>
-                    </View >
+                                {chartData ? (
+                                    <LineChart
+                                        data={chartData}
+                                        width={screenWidth - 48}
+                                        height={220}
+                                        yAxisLabel="$"
+                                        yAxisInterval={1}
+                                        chartConfig={{
+                                            backgroundColor: "#ffffff",
+                                            backgroundGradientFrom: "#ffffff",
+                                            backgroundGradientTo: "#ffffff",
+                                            decimalPlaces: 2,
+                                            color: (opacity = 1) =>
+                                                `rgba(30, 64, 175, ${opacity})`,
+                                            labelColor: (opacity = 1) =>
+                                                `rgba(75, 85, 99, ${opacity})`,
+                                            style: { borderRadius: 16 },
+                                            propsForDots: {
+                                                r: "4",
+                                                strokeWidth: "2",
+                                                stroke: "#1E40AF"
+                                            }
+                                        }}
+                                        bezier
+                                        style={{ borderRadius: 16 }}
+                                    />
+                                ) : (
+                                    <View className="h-48 justify-center items-center">
+                                        <Text className="text-dark-200">
+                                            Not enough data for chart
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                        )}
+                    />
                 )}
-            </SafeAreaView >
-        </View >
+            </SafeAreaView>
+        </View>
     )
 }
 

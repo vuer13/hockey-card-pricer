@@ -157,96 +157,97 @@ const CardDetails = () => {
     const base_url = `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/`
 
     return (
-        <View className="flex-1 bg-black">
+        <View className="flex-1 bg-background">
             {priceLoading ? (
-                <View className="flex-1 justify-center items-center bg-black">
-                    <ActivityIndicator size="large" color="white" />
+                <View className="flex-1 justify-center items-center">
+                    <ActivityIndicator size="large" color="#1E40AF" />
                 </View>
             ) : (
-                <SafeAreaView className="flex-1 bg-black">
-                    <View className="flex-row items-center p-4 border-b border-gray-800">
-                        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-                            <Ionicons name="arrow-back" size={24} color="white" />
-                        </TouchableOpacity >
-                        <Text className="text-white text-xl font-bold">Card Details</Text>
-                        <TouchableOpacity onPress={saveCard} className="mr-4">
-                            <Text className="text-white font-bold">
-                                {isSaved ? "Unsave" : "Save Card"}
-                            </Text>
-                        </TouchableOpacity >
-                    </View >
+                <SafeAreaView className="flex-1">
+                    <View className="flex-row items-center justify-between px-6 py-4 border-b border-border bg-white">
+                        <TouchableOpacity onPress={() => router.back()}>
+                            <Ionicons name="arrow-back" size={24} color="#1E40AF" />
+                        </TouchableOpacity>
 
-                    <ScrollView className="p-4">
-                        <View className="h-96 w-full bg-gray-900 rounded-xl mb-6 overflow-hidden border border-gray-700">
+                        <Text className="text-primary text-xl font-bold">
+                            Card Details
+                        </Text>
+
+                        <TouchableOpacity onPress={saveCard}>
+                            <Text className="text-primary font-semibold">
+                                {isSaved ? "Unsave" : "Save"}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
+                        <View className="h-96 w-full bg-white rounded-2xl mb-8 overflow-hidden border border-border shadow-sm">
                             <Image
                                 source={{ uri: `${base_url}${card.front_image_key}` }}
                                 className="w-full h-full"
                                 resizeMode="contain"
                             />
                         </View>
-
-                        {/* Info Section */}
-                        <View className="bg-gray-900 rounded-xl p-6 gap-4">
+                        <View className="bg-white rounded-2xl p-6 mb-8 border border-border shadow-sm">
                             <DetailRow label="Player Name" value={card.name} />
                             <DetailRow label="Team" value={card.team_name || 'N/A'} />
                             <DetailRow label="Series" value={card.card_series} />
                             <DetailRow label="Card #" value={card.card_number} />
                             <DetailRow label="Type" value={card.card_type} />
                         </View>
-
-                        <View className="absolute left-0 right-0 p-4">
-                            <TouchableOpacity
-                                onPress={handlePrice}
-                                className="bg-green-600 w-full py-4 rounded-xl items-center shadow-lg"
-                            >
-                                <Text className="text-white font-bold text-lg">
-                                    Get eBay Price
+                        <TouchableOpacity
+                            onPress={handlePrice}
+                            className="bg-primary w-full py-4 rounded-2xl items-center mb-4"
+                        >
+                            <Text className="text-white font-bold text-lg">
+                                Get eBay Price
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={viewPriceHistory}
+                            className="border border-border bg-white w-full py-4 rounded-2xl items-center mb-6"
+                        >
+                            <Text className="text-primary font-semibold text-lg">
+                                View Price History
+                            </Text>
+                        </TouchableOpacity>
+                        {price ? (
+                            <View className="bg-white p-6 rounded-2xl border border-border shadow-sm">
+                                <Text className="text-dark-200 text-sm mb-1">
+                                    Estimated Value
                                 </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={viewPriceHistory}
-                                className="bg-green-600 w-full py-4 rounded-xl items-center shadow-lg"
-                            >
-                                <Text className="text-white font-bold text-lg">
-                                    View Price History
+                                <Text className="text-primary text-3xl font-bold mb-4">
+                                    ${price}
                                 </Text>
-                            </TouchableOpacity>
 
-                            {price ? (
-                                <View className="bg-gray-800 p-4 rounded-xl flex-row justify-between items-center">
-                                    <View>
-                                        <Text className="text-gray-400 text-xs">Estimated Value:</Text>
-                                        <Text className="text-green-400 text-2xl font-bold">${price}</Text>
-                                    </View>
-                                    <View>
-                                        <Text className="text-gray-400 text-xs text-right">Price Low:</Text>
-                                        <Text className="text-white font-bold">${priceLow} </Text>
-                                        <Text className="text-gray-400 text-xs text-right">Price High:</Text>
-                                        <Text className="text-white font-bold">${priceHigh} </Text>
-                                        <Text className="text-gray-400 text-xs text-right">Confidence:</Text>
-                                        <Text className="text-white font-bold">${confidence} </Text>
-                                        <Text className="text-gray-400 text-xs text-right">Number of Sales:</Text>
-                                        <Text className="text-white font-bold">${numSales} </Text>
-                                    </View>
-                                </View>
-                            ) : (
-                                <View className="mt-4 items-center">
-                                    <Text className="text-gray-400">No price data available.</Text>
-                                </View>
-                            )}
-                        </View>
+                                <DetailRow label="Low" value={`$${priceLow}`} />
+                                <DetailRow label="High" value={`$${priceHigh}`} />
+                                <DetailRow label="Confidence" value={`${confidence}`} />
+                                <DetailRow label="Sales" value={`${numSales}`} />
+                            </View>
+                        ) : (
+                            <View className="mt-6 items-center">
+                                <Text className="text-dark-200">
+                                    No price data available.
+                                </Text>
+                            </View>
+                        )}
+
                     </ScrollView>
-                </SafeAreaView >
+                </SafeAreaView>
             )}
         </View>
     )
 }
 
-const DetailRow = ({ label, value }: { label: string, value: string }) => (
-    <View className="flex-row justify-between items-center border-b border-gray-800 pb-2 mb-2">
-        <Text className="text-gray-400 text-base">{label}</Text>
-        <Text className="text-white text-lg font-bold">{value}</Text>
+const DetailRow = ({ label, value }: { label: string; value: string }) => (
+    <View className="flex-row justify-between items-center border-b border-border pb-3 mb-3">
+        <Text className="text-dark-200 text-base">
+            {label}
+        </Text>
+        <Text className="text-black text-lg font-semibold">
+            {value}
+        </Text>
     </View>
 );
 

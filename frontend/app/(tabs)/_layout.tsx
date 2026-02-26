@@ -7,21 +7,20 @@ import { icons } from '@/constants/icons'
 const TabIcon = ({ focused, icon, title }: any) => {
     if (focused) {
         return (
-            <ImageBackground
-                source={images.highlight}
-                className='flex flex-row w-full flex-1 min-w-[112px] min-h-16 mt-4 justify-center rounded-full overflow-hidden items-center'
-            >
-                <Image source={icon} tintColor='#151312' className='size-5' />
-                <Text className='text-black text-base font-semibold ml-2'>{title}</Text>
-            </ ImageBackground>
-        )
-    } else {
-        return (
-            <View className='size-full justify-center items-center mt-4 rounded-full'>
-                <Image source={icon} tintColor='#F5F5F5' className='size-5' />
+            <View className="flex-row items-center justify-center px-4 py-2 rounded-full bg-primary/10">
+                <Image source={icon} tintColor="#1E40AF" className="size-5" />
+                <Text className="text-primary text-sm font-semibold ml-2">
+                    {title}
+                </Text>
             </View>
         )
     }
+
+    return (
+        <View className="justify-center items-center">
+            <Image source={icon} tintColor="#9CA3AF" className="size-5" />
+        </View>
+    )
 }
 
 const _layout = () => {
@@ -30,21 +29,23 @@ const _layout = () => {
             screenOptions={{
                 tabBarShowLabel: false,
                 tabBarItemStyle: {
-                    width: '100%',
-                    height: '100%',
+                    flex: 1,
                     justifyContent: 'center',
                     alignItems: 'center',
                 },
                 tabBarStyle: {
-                    backgroundColor: '#151312',
-                    borderRadius: 50,
-                    marginHorizontal: 20,
-                    marginBottom: 36,
-                    height: 52,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 30,
+                    marginHorizontal: 24,
+                    marginBottom: 30,
+                    height: 64,
                     position: 'absolute',
-                    overflow: 'hidden',
                     borderWidth: 1,
-                    borderColor: '#333'
+                    borderColor: '#E5E7EB',
+                    shadowColor: '#000',
+                    shadowOpacity: 0.05,
+                    shadowRadius: 10,
+                    elevation: 5
                 }
             }}
         >
