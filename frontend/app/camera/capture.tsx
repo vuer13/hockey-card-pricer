@@ -67,7 +67,7 @@ export default function capture() {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // Send to backend
-            const response = await apiFetch(`${API_URL}/detect-card`, {
+            const response = await apiFetch(`/detect-card`, {
                 method: 'POST',
                 body: formData
             });
@@ -114,9 +114,11 @@ export default function capture() {
     }
 
     return (
-        <View className="flex-1 bg-black justify-center items-center">
-            <ActivityIndicator size="large" color="#ffffff" />
-            <Text className="text-white mt-5 text-lg font-bold">{status}</Text>
+        <View className="flex-1 bg-white justify-center items-center">
+            <ActivityIndicator size="large" color="#1E40AF" />
+            <Text className="text-primary mt-5 text-lg font-bold">
+                {status}
+            </Text>
         </View>
     );
 }

@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from .model import Card, CardImage
 
-def get_cards(db: Session, search_query: str = None, user_id, limit = 100):
+def get_cards(db: Session, user_id, search_query: str = None, limit = 100):
     """Gets cards and front images from the database"""
     
     # Joins cards table with their front image s3_key and filter by user id

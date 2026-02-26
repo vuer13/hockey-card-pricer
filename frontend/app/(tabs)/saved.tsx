@@ -49,7 +49,7 @@ const Saved = () => {
     const fetchSavedCards = async () => {
         try {
             setLoading(true);
-            const response = await apiFetch(`${API_BASE}/saved-cards`);
+            const response = await apiFetch(`/saved-cards`);
             const json = await response.json();
 
             if (json.status === 'ok') {
@@ -63,17 +63,14 @@ const Saved = () => {
     };
 
     return (
-        <View className="flex-1 bg-black">
-            <Image source={images.bg} className="absolute w-full z-0" />
-
-            <SafeAreaView className="flex-1 px-4">
-                <Text className="text-white text-2xl font-bold my-6">
+        <View className="flex-1 bg-background">
+            <SafeAreaView className="flex-1 px-6">
+                <Text className="text-primary text-3xl font-bold text-center my-6">
                     Saved Collection
                 </Text>
-
                 {loading ? (
                     <View className="flex-1 justify-center items-center">
-                        <ActivityIndicator size="large" color="#16a34a" />
+                        <ActivityIndicator size="large" color="#1E40AF" />
                     </View>
                 ) : (
                     <FlatList
@@ -81,16 +78,19 @@ const Saved = () => {
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={{ paddingBottom: 100 }}
                         showsVerticalScrollIndicator={false}
-
                         renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => router.push(`/cards/${item.id}`)}>
+                            <TouchableOpacity
+                                onPress={() => router.push(`/cards/${item.id}`)}
+                                className="mb-6"
+                            >
                                 <CardItem item={item} />
                             </TouchableOpacity>
                         )}
-
                         ListEmptyComponent={
-                            <View className="mt-20 items-center">
-                                <Text className="text-gray-500 text-lg">No saved cards yet.</Text>
+                            <View className="flex-1 justify-center items-center mt-20">
+                                <Text className="text-dark-200 text-lg">
+                                    No saved cards yet.
+                                </Text>
                             </View>
                         }
                     />

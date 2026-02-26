@@ -25,7 +25,7 @@ from db.db_get import get_cards
 from db.init_db import init_db
 from db.schemas import TrendPoint
 
-from utils.auth import current_user
+from auth.supabase_auth import current_user
 
 import logging
 
@@ -38,10 +38,7 @@ S3_BUCKET = os.getenv("S3_BUCKET")
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:19006",
-        "exp://*",                 
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -353,7 +350,11 @@ def get_prices(card_id: str, db: Session = Depends(get_db), user = Depends(curre
     
 @app.get("/cards")
 def read_cards(q: str = None, db: Session = Depends(get_db), user = Depends(current_user)):
-    results = get_cards(db, q, user["user_id"])
+    results = get_cards(
+        db=db,
+        user_id=user["user_id"],
+        search_query=q
+    )
 
     formatted_cards = []
     
@@ -412,7 +413,7 @@ def get_saved_cards(db: Session = Depends(get_db), user = Depends(current_user))
             "image": f"{base_url}{front_key}" if front_key else None,
             "saved": card.saved
         })
-        
+            
     return ok(formatted_cards)
 
 @app.put("/card/{card_id}/save")

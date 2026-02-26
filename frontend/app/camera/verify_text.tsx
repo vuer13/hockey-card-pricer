@@ -33,7 +33,7 @@ const verify_text = () => {
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // POST request to confirm card details
-            const response = await apiFetch(`${API_URL}/confirm-card`, {
+            const response = await apiFetch(`/confirm-card`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -62,59 +62,69 @@ const verify_text = () => {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-black">
-            <ScrollView contentContainerStyle={{ padding: 24 }}>
+        <SafeAreaView className="flex-1 bg-background">
+            <ScrollView contentContainerStyle={{
+                flexGrow: 1,
+                padding: 24,
+                justifyContent: "center",
+            }}>
 
-                <Text className="text-white text-3xl font-bold text-center mb-8">
+                <Text className="text-primary text-3xl font-bold text-center mb-8">
                     Verify Details
                 </Text>
 
-                {/* Input Fields */}
                 <View className="space-y-4">
+
                     <TextInput
-                        className="bg-gray-900 text-white text-lg p-4 rounded-xl border border-gray-800"
+                        className="bg-white text-black text-lg p-4 rounded-2xl border border-border"
+                        style={{ textAlignVertical: "center" }}
                         onChangeText={setName}
                         defaultValue={name}
                         placeholder="Player Name"
-                        placeholderTextColor="#6B7280"
+                        placeholderTextColor="#9CA3AF"
                     />
 
                     <TextInput
-                        className="bg-gray-900 text-white text-lg p-4 rounded-xl border border-gray-800"
+                        className="bg-white text-black text-lg p-4 rounded-2xl border border-border"
+                        style={{ textAlignVertical: "center" }}
                         onChangeText={setCardNumber}
                         defaultValue={card_number}
                         placeholder="Card Number"
-                        placeholderTextColor="#6B7280"
+                        placeholderTextColor="#9CA3AF"
                     />
 
                     <TextInput
-                        className="bg-gray-900 text-white text-lg p-4 rounded-xl border border-gray-800"
+                        className="bg-white text-black text-lg p-4 rounded-2xl border border-border"
+                        style={{ textAlignVertical: "center" }}
                         onChangeText={setCardSeries}
                         defaultValue={card_series}
                         placeholder="Series / Year"
-                        placeholderTextColor="#6B7280"
+                        placeholderTextColor="#9CA3AF"
                     />
 
                     <TextInput
-                        className="bg-gray-900 text-white text-lg p-4 rounded-xl border border-gray-800"
+                        className="bg-white text-black text-lg p-4 rounded-2xl border border-border"
+                        style={{ textAlignVertical: "center" }}
                         onChangeText={setCardType}
                         defaultValue={card_type}
                         placeholder="Card Type (e.g. Young Guns)"
-                        placeholderTextColor="#6B7280"
+                        placeholderTextColor="#9CA3AF"
                     />
 
                     <TextInput
-                        className="bg-gray-900 text-white text-lg p-4 rounded-xl border border-gray-800"
+                        className="bg-white text-black text-lg p-4 rounded-2xl border border-border"
+                        style={{ textAlignVertical: "center" }}
                         onChangeText={setTeamName}
                         defaultValue={team_name}
                         placeholder="Team Name"
-                        placeholderTextColor="#6B7280"
+                        placeholderTextColor="#9CA3AF"
                     />
+
                 </View>
 
                 <TouchableOpacity
                     onPress={confirmCard}
-                    className="bg-green-600 w-full py-5 rounded-xl items-center mt-10 shadow-lg shadow-green-900/40"
+                    className="bg-primary w-full py-5 rounded-2xl items-center mt-10"
                 >
                     <Text className="text-white font-bold text-xl">
                         Confirm Card

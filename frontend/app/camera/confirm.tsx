@@ -55,7 +55,7 @@ const confirm = () => {
             // Crop box stays strictly inside the image
             const originX = Math.max(0, Math.round(x1));
             const originY = Math.max(0, Math.round(y1));
-            
+
             // Width is (Right - Left), Height is (Bottom - Top)
             let w = Math.round(x2 - x1);
             let h = Math.round(y2 - y1);
@@ -68,7 +68,7 @@ const confirm = () => {
                 originX: originX,
                 originY: originY,
                 remainingX: imgW - originX,
-                remainingY: imgH - originY 
+                remainingY: imgH - originY
             });
 
             let width = Math.min(w, imgW - originX);
@@ -162,14 +162,15 @@ const confirm = () => {
     };
 
     return (
-        < View className="flex-1 bg-black p-4 pt-12" >
-            <Text className="text-white text-2xl font-bold text-center mb-6 capitalize">
+        <View className="flex-1 bg-background px-6 pt-10">
+
+            <Text className="text-primary text-3xl font-bold text-center mb-6 capitalize">
                 Confirm {side}
             </Text>
 
-            <View className="flex-1 bg-gray-900 rounded-xl mb-6 justify-center overflow-hidden border border-gray-800">
+            <View className="flex-1 bg-white rounded-2xl mb-8 justify-center items-center overflow-hidden border border-border shadow-sm">
                 {loading || !displayedUri ? (
-                    <ActivityIndicator size="large" color="white" />
+                    <ActivityIndicator size="large" color="#1E40AF" />
                 ) : (
                     <Image
                         source={{ uri: displayedUri }}
@@ -179,22 +180,26 @@ const confirm = () => {
                 )}
             </View>
 
-            <View className="flex-row gap-4 mb-4">
+            <View className="flex-row gap-4 mb-6">
                 <TouchableOpacity
                     onPress={manualCrop}
-                    className="flex-1 bg-gray-600 py-4 rounded-xl items-center"
+                    className="flex-1 border border-border py-4 rounded-2xl items-center bg-white"
                 >
-                    <Text className="text-white font-bold text-lg">Manually Fix Crop</Text>
+                    <Text className="text-primary font-semibold text-lg">
+                        Manually Fix Crop
+                    </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     onPress={handleConfirm}
-                    className="flex-1 bg-blue-600 py-4 rounded-xl items-center"
+                    className="flex-1 bg-primary py-4 rounded-2xl items-center"
                 >
-                    <Text className="text-white font-bold text-lg">Confirm Crop</Text>
+                    <Text className="text-white font-semibold text-lg">
+                        Confirm Crop
+                    </Text>
                 </TouchableOpacity>
             </View>
-        </View >
+        </View>
     );
 }
 

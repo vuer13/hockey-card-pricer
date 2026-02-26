@@ -62,6 +62,13 @@ const staging = () => {
         extractTextFromImage();
     };
 
+    const handleCancel = () => {
+        setBackImage(null);
+        setFrontImage(null);
+        setLoading(false);
+        router.push("/");
+    };
+
     const extractTextFromImage = async () => {
         try {
             const formData = new FormData();
@@ -74,7 +81,7 @@ const staging = () => {
 
             const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
-            const response = await apiFetch(`${API_URL}/extract-text`, {
+            const response = await apiFetch(`/extract-text`, {
                 method: 'POST',
                 body: formData
             });
@@ -115,50 +122,90 @@ const staging = () => {
     // Since front/back logic is the same in these steps
     const CardSlot = ({ side, data }: { side: 'front' | 'back', data: any }) => (
         <TouchableOpacity
-            onPress={() => handleScan(side)} // Start process of getting photo
-            className="flex-1 bg-gray-900 rounded-xl border-2 border-dashed border-gray-600 justify-center items-center overflow-hidden m-2"
+            onPress={() => handleScan(side)}
+            className="flex-1 bg-white rounded-2xl border-2 border-dashed border-border justify-center items-center overflow-hidden m-3 shadow-sm"
         >
             {data ? (
                 <>
-                    <Image source={{ uri: data.uri }} className="w-full h-full" resizeMode="cover" />
+                    <Image
+                        source={{ uri: data.uri }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                    />
 
-                    <View className="absolute bottom-0 items-center">
-                        <Text className="text-white font-bold">Retake Photo</Text>
+                    <View className="absolute bottom-0 w-full bg-black/40 py-2 items-center">
+                        <Text className="text-white font-semibold">
+                            Retake Photo
+                        </Text>
                     </View>
                 </>
             ) : (
-                //Show plus button if no photo yet
                 <View className="items-center">
-                    <View className="w-12 h-12 rounded-full bg-gray-700 items-center justify-center mb-2">
-                        <Text className="text-white text-2xl">+</Text>
+                    <View className="w-14 h-14 rounded-full bg-light-200 items-center justify-center mb-3">
+                        <Text className="text-primary text-3xl font-bold">+</Text>
                     </View>
-                    <Text className="text-white-400 font-bold uppercase">{side}</Text>
+
+                    <Text className="text-primary font-semibold uppercase tracking-wide">
+                        {side}
+                    </Text>
                 </View>
             )}
         </TouchableOpacity>
     );
 
     return (
-        <View className="flex-1 bg-gray-900 rounded-xl mb-6 justify-center overflow-hidden border border-gray-800">
+        <View className="flex-1 bg-background px-6 pt-6">
             {loading ? (
-                <ActivityIndicator size="large" color="white" />
-            ) : (
-                <SafeAreaView>
-                    <Text className="text-white text-2xl font-bold text-center mb-2">New Entry</Text>
+                <View className="flex-1 bg-background justify-center items-center">
+                    <ActivityIndicator size="large" color="#1E40AF" />
 
-                    <View className="flex-row h-64 mb-8">
+                    <Text className="text-primary text-lg font-semibold mt-6">
+                        Analyzing...
+                    </Text>
+                </View>
+            ) : (
+                <SafeAreaView className="flex-1 justify-center">
+                    <Text className="text-primary text-4xl font-bold text-center mb-8">
+                        New Card
+                    </Text>
+
+                    <Text className="text-black font-bold mb-4">
+                        Take pictures of the front and the back of your hockey card, simply by clicking below
+                    </Text>
+
+                    <Text className="text-black font-bold mb-8">
+                        To retake, re-click on the boxes
+                    </Text>
+
+                    <View className="flex-row h-72 mb-10">
                         <CardSlot side="front" data={frontImage} />
                         <CardSlot side="back" data={backImage} />
                     </View>
 
                     <TouchableOpacity
                         onPress={handleFinalize}
-                        className={`w-full py-4 rounded-xl items-center ${(frontImage && backImage) ? 'bg-blue-600' : 'bg-gray-800'
+                        disabled={!(frontImage && backImage)}
+                        className={`w-full py-4 rounded-2xl items-center ${frontImage && backImage
+                            ? "bg-primary"
+                            : "bg-light-300"
                             }`}
                     >
-                        <Text className={`text-lg font-bold ${(frontImage && backImage) ? 'text-white' : 'text-gray-500'
-                            }`}>
+                        <Text
+                            className={`text-lg font-bold ${frontImage && backImage
+                                ? "text-white"
+                                : "text-dark-200"
+                                }`}
+                        >
                             Extract Information
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={handleCancel}
+                        className="w-full py-4 mt-6 rounded-2xl items-center bg-red-500"
+                    >
+                        <Text className="text-white font-semibold text-lg">
+                            Cancel
                         </Text>
                     </TouchableOpacity>
                 </SafeAreaView>

@@ -1,8 +1,7 @@
 import { signUpWithEmail } from '@/auth/supabase';
 import { useRouter } from 'expo-router';
 import React from 'react'
-import { Button, Pressable, TextInput, View } from 'react-native';
-import { Text } from 'react-native-svg';
+import { Pressable, TextInput, View, Text } from 'react-native';
 
 export default function SignUp() {
     const router = useRouter();
@@ -26,45 +25,66 @@ export default function SignUp() {
     };
 
     return (
-        <View className="flex-1 justify-center items-center px-6">
-            <View className="w-full max-w-md">
-                <Text>
+        <View className="flex-1 justify-center bg-background px-6">
+            <View className="mb-24 items-center">
+                <Text className="text-5xl font-semibold">
+                    Welcome to the
+                </Text>
+                <Text className="text-3xl font-semibold text-primary">
+                    Hockey Price Evaluator
+                </Text>
+            </View>
+            <View className="w-full max-w-md self-center">
+                <Text className='text-4xl text-primary font-bold mb-5'>
                     Create Account
                 </Text>
 
                 <TextInput
                     placeholder="Email"
+                    placeholderTextColor="#000000"
                     autoCapitalize="none"
                     onChangeText={setEmail}
-                    className="border rounded px-3 py-2 mb-4"
+                    className="border border-primary rounded-lg px-4 py-3 mb-4"
                 />
 
                 <TextInput
                     placeholder="Password"
+                    placeholderTextColor="#000000"
                     secureTextEntry
                     onChangeText={setPassword}
-                    className="border rounded px-3 py-2 mb-4"
+                    className="border border-primary rounded-lg px-4 py-3 mb-4"
                 />
 
                 <TextInput
                     placeholder="Confirm Password"
+                    placeholderTextColor="#000000"
                     secureTextEntry
                     onChangeText={setConfirmPassword}
-                    className="border rounded px-3 py-2 mb-4"
+                    className="border border-primary rounded-lg px-4 py-3 mb-4"
                 />
-
-                {error ? (
-                    <Text>
-                        {error}
-                    </Text>
-                ) : null}
 
                 <Pressable
                     onPress={handleSignup}
-                    className="border rounded py-2 items-center"
+                    className="bg-secondary rounded-lg py-3 items-center mb-3"
                 >
-                    <Text>Create account</Text>
+                    <Text className="text-white">Create account</Text>
                 </Pressable>
+
+
+                <Pressable
+                    onPress={() => router.push("/login")}
+                    className="bg-white rounded-lg py-3 items-center mb-3"
+                >
+                    <Text>Login</Text>
+                </Pressable>
+
+                {error ? (
+                    <View className="bg-red-100 border border-red-300 rounded-lg p-3 mb-4">
+                        <Text className="text-red-600 text-center">
+                            {error.charAt(0).toUpperCase() + error.slice(1)}
+                        </Text>
+                    </View>
+                ) : null}
             </View>
         </View>
     );
