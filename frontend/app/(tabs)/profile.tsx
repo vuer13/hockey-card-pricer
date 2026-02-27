@@ -1,5 +1,5 @@
-import { View, Text, Button, Pressable, ScrollView } from 'react-native'
-import React from 'react'
+import { View, Text, Pressable, ScrollView } from 'react-native'
+import * as React from "react";
 import { signOut } from '@/auth/supabase'
 
 const Profile = () => {

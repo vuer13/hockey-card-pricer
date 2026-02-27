@@ -1,5 +1,5 @@
-import { View, Text, Image, TextInput } from 'react-native'
-import React from 'react'
+import { View, Image, TextInput } from 'react-native'
+import * as React from "react";
 import { icons } from '@/constants/icons'
 
 interface Props {

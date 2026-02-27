@@ -1,15 +1,16 @@
 import cv2
 from scripts.helpers import detect_card, load_models
 
+
 class CardDetectionPipeline:
     def __init__(self, yolo):
         self.yolo = yolo
-        
+
     def run(self, image_path):
         """Card Detection on image"""
-        
+
         image = cv2.imread(image_path)
-        
+
         if image is None:
             raise ValueError("Could not load image")
 
@@ -19,8 +20,9 @@ class CardDetectionPipeline:
             return None
 
         return result
- 
-def test_a():    
+
+
+def test_a():
     yolo, _, _ = load_models()
 
     pipeline = CardDetectionPipeline(yolo)

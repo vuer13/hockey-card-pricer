@@ -41,8 +41,6 @@ const PriceDetails = () => {
         try {
             setLoading(true);
 
-            const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
-
             const response = await apiFetch(`/card/${cardId}/price-trend`);
 
             if (response.ok) {

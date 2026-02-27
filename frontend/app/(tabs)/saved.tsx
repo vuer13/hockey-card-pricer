@@ -1,11 +1,8 @@
 import { View, Text, TouchableOpacity, Image, ActivityIndicator, FlatList } from 'react-native'
-import React, { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { images } from "@/constants/images";
 import { apiFetch } from '@/lib/api';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
 interface Card {
     id: string;

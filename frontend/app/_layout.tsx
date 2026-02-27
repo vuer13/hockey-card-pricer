@@ -1,4 +1,4 @@
-import { Slot, Stack, useRouter, useSegments } from "expo-router";
+import { Slot, useRouter, useSegments } from "expo-router";
 import './globals.css';
 import { useEffect, useState } from "react";
 import { supabase } from "@/auth/supabase";

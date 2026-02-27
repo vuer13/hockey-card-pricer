@@ -4,9 +4,8 @@ import { ActivityIndicator, Alert, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { apiFetch } from '@/lib/api';
 
-export default function capture() {
+export default function Capture() {
     const router = useRouter();
-    const params = useLocalSearchParams();
 
     const { side, existingFrontUri, existingFrontKey, existingBackUri, existingBackKey } = useLocalSearchParams();
     const [status, setStatus] = useState("Initialization")
@@ -63,8 +62,6 @@ export default function capture() {
             console.log("Detecting side:", side);
 
             formData.append('image_type', side as string);
-
-            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // Send to backend
             const response = await apiFetch(`/detect-card`, {
