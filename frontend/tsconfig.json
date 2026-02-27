@@ -1,9 +1,13 @@
 {
-    "extends": "expo/tsconfig.base",
     "compilerOptions": {
+        "jsx": "react-jsx",
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
         "baseUrl": ".",
-        "jsx": "react-native",
         "paths": {
             "@/*": [
                 "./*"
@@ -13,8 +17,7 @@
     "include": [
         "**/*.ts",
         "**/*.tsx",
-        ".expo/types/**/*.ts",
-        "expo-env.d.ts",
-        "nativewind-env.d.ts"
+        "**/*.js",
+        "**/*.jsx"
     ]
 }
