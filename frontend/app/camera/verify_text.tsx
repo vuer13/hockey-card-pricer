@@ -1,8 +1,9 @@
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState } from 'react'
+import * as React from "react";
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { apiFetch } from '@/lib/api';
+import { useState } from 'react';
 
 const Verify_Text = () => {
     const router = useRouter();

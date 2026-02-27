@@ -1,6 +1,6 @@
 import { signInWithEmail } from '@/auth/supabase';
 import { useRouter } from 'expo-router';
-import React from 'react'
+import * as React from "react";
 import { Pressable, TextInput, View, Text } from 'react-native';
 
 export default function Login() {

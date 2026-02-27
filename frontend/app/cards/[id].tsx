@@ -1,6 +1,6 @@
 import { View, Text, Alert, ActivityIndicator, TouchableOpacity, ScrollView, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { apiFetch } from '@/lib/api';
