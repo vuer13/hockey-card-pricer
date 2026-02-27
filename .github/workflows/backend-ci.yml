@@ -2,12 +2,13 @@ name: Backend CI (Ruff)
 
 on:
     push:
-        branches: ["main"]
         paths:
             - "backend/**"
+            - ".github/workflows/**"
     pull_request:
         paths:
             - "backend/**"
+            - ".github/workflows/**"
 
 jobs:
     ruff: 
