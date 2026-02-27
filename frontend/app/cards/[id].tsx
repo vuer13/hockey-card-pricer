@@ -3,7 +3,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import saved from '../(tabs)/saved';
 import { apiFetch } from '@/lib/api';
 
 type CardData = {
@@ -21,7 +20,6 @@ type CardData = {
 const CardDetails = () => {
     const router = useRouter();
     const { id } = useLocalSearchParams(); // Grabs id from filename 
-    const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
     const rawId = Array.isArray(id) ? id[0] : id;
     const cleanId = rawId?.replace('_price', '') || '';
@@ -52,8 +50,6 @@ const CardDetails = () => {
 
     const fetchCardDetails = async () => {
         try {
-            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
-
             const response = await apiFetch(`/card/${cleanId}`);
             const json = await response.json();
 

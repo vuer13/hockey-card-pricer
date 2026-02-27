@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiFetch } from '@/lib/api';
 
-const staging = () => {
+const Staging = () => {
     const router = useRouter();
     const params = useLocalSearchParams();
 
@@ -78,8 +78,6 @@ const staging = () => {
                 name: 'backImage.jpg',
                 type: 'image/jpeg'
             } as any);
-
-            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             const response = await apiFetch(`/extract-text`, {
                 method: 'POST',
@@ -214,4 +212,4 @@ const staging = () => {
     )
 }
 
-export default staging
+export default Staging

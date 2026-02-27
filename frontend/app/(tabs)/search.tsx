@@ -1,12 +1,9 @@
 import { icons } from "@/constants/icons";
-import { images } from "@/constants/images";
 import { Image, View, Text, ActivityIndicator, FlatList, TouchableOpacity } from "react-native";
 import SearchBar from "@/components/SearchBar";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
 interface Card {
     id: string;

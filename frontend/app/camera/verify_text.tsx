@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { apiFetch } from '@/lib/api';
 
-const verify_text = () => {
+const Verify_Text = () => {
     const router = useRouter();
     const params = useLocalSearchParams();
 
@@ -14,12 +14,8 @@ const verify_text = () => {
     const [card_type, setCardType] = useState(params.card_type as string || '');
     const [team_name, setTeamName] = useState(params.team_name as string || '');
 
-    const [loading, setLoading] = useState(false);
-
     const confirmCard = async () => {
         try {
-            setLoading(true);
-
             const payload = {
                 name: name,
                 card_series: card_series,
@@ -29,8 +25,6 @@ const verify_text = () => {
                 front_image_key: params.frontImage,
                 back_image_key: params.backImage
             };
-
-            const API_URL = process.env.EXPO_PUBLIC_API_BASE_HOME;
 
             // POST request to confirm card details
             const response = await apiFetch(`/confirm-card`, {
@@ -56,8 +50,6 @@ const verify_text = () => {
         } catch (error) {
             console.error("Error confirming card:", error);
             Alert.alert("Network Error", "Failed to confirm card details.");
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -136,4 +128,4 @@ const verify_text = () => {
     )
 }
 
-export default verify_text
+export default Verify_Text

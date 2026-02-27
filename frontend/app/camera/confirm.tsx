@@ -5,7 +5,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 
-const confirm = () => {
+const Confirm = () => {
     const router = useRouter();
     const params = useLocalSearchParams(); // To get information
 
@@ -14,7 +14,7 @@ const confirm = () => {
     // Previous params from capture
     const currentUri = params.originalUri as string; // Current uri
     const bbox = params.bbox ? JSON.parse(params.bbox as string) : null; // Bounding box for cropping
-    const { s3_key_original, s3_key_crop, side, existingFrontUri, existingFrontKey, existingBackUri, existingBackKey } = params; // where the image is stored and which side
+    const { s3_key_crop, side, existingFrontUri, existingFrontKey, existingBackUri, existingBackKey } = params; // where the image is stored and which side
 
     const [displayedUri, setDisplayedUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -141,6 +141,7 @@ const confirm = () => {
             await MediaLibrary.deleteAssetsAsync([asset]);
         } catch (error) {
             Alert.alert("Error", "Manual cropping failed.");
+            console.log("Manual-cropping failed.", error);
         } finally {
             setLoading(false);
         }
@@ -203,4 +204,4 @@ const confirm = () => {
     );
 }
 
-export default confirm
+export default Confirm
