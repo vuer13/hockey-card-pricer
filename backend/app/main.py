@@ -71,6 +71,8 @@ async def log_requests(request: Request, call_next):
 def startup():
     """Loads models up and all pipelines"""
     init_db()
+    if os.getenv("SKIP_MODEL_LOAD") == "1":
+        return
     global yolo, model, ocr, pipeline_one, pipeline_two
     yolo, model, ocr = load_models()
     pipeline_one = CardDetectionPipeline(yolo)
