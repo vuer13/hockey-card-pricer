@@ -70,7 +70,9 @@ async def log_requests(request: Request, call_next):
 @app.on_event("startup")
 def startup():
     """Loads models up and all pipelines"""
-    init_db()
+    if os.getenv("SKIP_DB_INIT") != "1":
+        init_db()
+    
     if os.getenv("SKIP_MODEL_LOAD") == "1":
         return
     global yolo, model, ocr, pipeline_one, pipeline_two
