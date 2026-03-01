@@ -6,7 +6,7 @@ import easyocr
 import torchvision.transforms as T
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
 
-from utils.s3_models import download_model
+from app.utils.s3_models import download_model
 
 
 def load_models():

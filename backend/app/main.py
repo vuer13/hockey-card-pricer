@@ -9,22 +9,22 @@ from dotenv import load_dotenv
 from PIL import Image, ImageOps
 from typing import List
 
-from scripts.card_detection import CardDetectionPipeline
-from scripts.text_detection import TextExtraction
-from scripts.pricing import price_card as run_pricing
-from scripts.helpers import load_models
+from app.scripts.card_detection import CardDetectionPipeline
+from app.scripts.text_detection import TextExtraction
+from app.scripts.pricing import price_card as run_pricing
+from app.scripts.helpers import load_models
 
-from utils.s3_images import upload_image
+from app.utils.s3_images import upload_image
 
 from sqlalchemy import asc
 from sqlalchemy.orm import Session
-from db.database import SessionLocal
-from db.model import Card, CardImage, CardPrice
-from db.db_get import get_cards
-from db.init_db import init_db
-from db.schemas import TrendPoint
+from app.db.database import SessionLocal
+from app.db.model import Card, CardImage, CardPrice
+from app.db.db_get import get_cards
+from app.db.init_db import init_db
+from app.db.schemas import TrendPoint
 
-from auth.supabase_auth import current_user
+from app.auth.supabase_auth import current_user
 
 import logging
 

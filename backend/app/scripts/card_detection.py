@@ -1,5 +1,5 @@
 import cv2
-from scripts.helpers import detect_card, load_models
+from .helpers import detect_card, load_models
 
 
 class CardDetectionPipeline:
