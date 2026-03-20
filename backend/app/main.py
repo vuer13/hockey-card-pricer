@@ -57,9 +57,7 @@ os.makedirs(CROP_DIR, exist_ok=True)
 # To check if middlware is working
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    logger.info(
-        "request_start", extra={"path": request.url.path, "method": request.method}
-    )
+    logger.info("request_start", extra={"path": request.url.path, "method": request.method})
     response = await call_next(request)
     return response
 
@@ -69,7 +67,7 @@ def startup():
     """Loads models up and all pipelines"""
     if os.getenv("SKIP_DB_INIT") != "1":
         init_db()
-    
+
     if os.getenv("SKIP_MODEL_LOAD") == "1":
         return
     global yolo, model, ocr, pipeline_one, pipeline_two
@@ -148,16 +146,12 @@ def confirm_card(
         db.refresh(card)  # Get new ID
 
         # Add Front Image
-        front_image = CardImage(
-            card_id=card.id, image_type="front", s3_key=req.front_image_key
-        )
+        front_image = CardImage(card_id=card.id, image_type="front", s3_key=req.front_image_key)
 
         db.add(front_image)
 
         # Add Back Image
-        back_image = CardImage(
-            card_id=card.id, image_type="back", s3_key=req.back_image_key
-        )
+        back_image = CardImage(card_id=card.id, image_type="back", s3_key=req.back_image_key)
 
         db.add(back_image)
         db.commit()
@@ -271,9 +265,7 @@ def detect_card(
 
 
 @app.post("/price-card")
-def price_card(
-    req: PriceCardRequest, db: Session = Depends(get_db), user=Depends(current_user)
-):
+def price_card(req: PriceCardRequest, db: Session = Depends(get_db), user=Depends(current_user)):
     """Prices a card based on its details"""
 
     pricing_input = {
@@ -338,12 +330,8 @@ def get_card(card_id: str, db: Session = Depends(get_db), user=Depends(current_u
         images = db.query(CardImage).filter(CardImage.card_id == card_id).all()
 
         # Organize/sort keys to get front key and back key
-        front_key = next(
-            (img.s3_key for img in images if img.image_type == "front"), None
-        )
-        back_key = next(
-            (img.s3_key for img in images if img.image_type == "back"), None
-        )
+        front_key = next((img.s3_key for img in images if img.image_type == "front"), None)
+        back_key = next((img.s3_key for img in images if img.image_type == "back"), None)
 
         return ok(
             {
@@ -394,9 +382,7 @@ def get_prices(card_id: str, db: Session = Depends(get_db), user=Depends(current
 
 
 @app.get("/cards")
-def read_cards(
-    q: str = None, db: Session = Depends(get_db), user=Depends(current_user)
-):
+def read_cards(q: str = None, db: Session = Depends(get_db), user=Depends(current_user)):
     results = get_cards(db=db, user_id=user["user_id"], search_query=q)
 
     formatted_cards = []
@@ -421,9 +407,7 @@ def read_cards(
 
 
 @app.get("/card/{card_id}/price-trend", response_model=List[TrendPoint])
-def get_price_trend(
-    card_id: UUID, db: Session = Depends(get_db), user=Depends(current_user)
-):
+def get_price_trend(card_id: UUID, db: Session = Depends(get_db), user=Depends(current_user)):
     """
     Fetches price history sorted by date
     """
@@ -456,9 +440,7 @@ def get_saved_cards(db: Session = Depends(get_db), user=Depends(current_user)):
 
     for card in cards:
         images = db.query(CardImage).filter(CardImage.card_id == card.id).all()
-        front_key = next(
-            (img.s3_key for img in images if img.image_type == "front"), None
-        )
+        front_key = next((img.s3_key for img in images if img.image_type == "front"), None)
 
         formatted_cards.append(
             {

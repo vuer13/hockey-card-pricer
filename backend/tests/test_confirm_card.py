@@ -9,18 +9,19 @@ def test_success(client):
         "front_image_key": "cards/test/front.jpg",
         "back_image_key": "cards/test/back.jpg",
     }
-    
+
     r = client.post("/confirm_card", json=payload)
     assert r.status_code == 200
     body = r.json()
-    
+
     assert body["status"] == "ok"
     assert body["error"] is None
     assert "card_id" in body["data"]
     assert isinstance(body["data"]["card_id"], str)
-    assert len(body["data"]["card_id"]) > 0 
+    assert len(body["data"]["card_id"]) > 0
     # May not need this check, but it ensures the card_id is not an empty string
-    
+
+
 def test_invalid_fields(client):
     """Test the confirm card endpoint with invalid fields (e.g. empty name, invalid card series)"""
     payload = {
@@ -38,7 +39,7 @@ def test_invalid_fields(client):
     assert body["status"] == "error"
     assert body["data"] is None
     assert body["error"]["code"] == "INVALID_INPUT"
-    
+
 
 def test_expected_fields(client):
     """Test that the expected fields are returned when retrieving a card after confirming it"""

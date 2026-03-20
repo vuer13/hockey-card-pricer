@@ -178,9 +178,7 @@ def compute_confidence(stats):
     )  # How spread out middle 50% prices are, guard if iqr is None
 
     sample_score = min(1.0, n / 20)  # More sales = higher confidence
-    spread_ratio = (
-        iqr / median if median else 1.0
-    )  # How wide prices are relative to median
+    spread_ratio = iqr / median if median else 1.0  # How wide prices are relative to median
     spread_score = max(0.0, 1.0 - spread_ratio)  # Less spread = higher confidence
 
     # Weighted: 60% sample size, 40% price spread

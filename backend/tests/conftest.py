@@ -42,7 +42,7 @@ def setup_test_db():
 def client(monkeypatch):
     # Replace with fake user
     main.app.dependency_overrides[current_user] = fake_user
-    
+
     # Override get_db dependency to use SQLite session
     def override_get_db():
         db = TestingSessionLocal()
@@ -50,7 +50,7 @@ def client(monkeypatch):
             yield db
         finally:
             db.close()
-    
+
     # Override get_db dependency to use SQLite session for tests
     main.app.dependency_overrides[main.get_db] = override_get_db
 

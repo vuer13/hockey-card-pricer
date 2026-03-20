@@ -1,6 +1,6 @@
 def test_saved(client):
     """Ensures card is saved"""
-    
+
     payload = {
         "name": "Nathan MacKinnon",
         "card_series": "Base Set",
@@ -10,7 +10,7 @@ def test_saved(client):
         "front_image_key": "cards/test3/front.jpg",
         "back_image_key": "cards/test3/back.jpg",
     }
-    
+
     card_id = client.post("/confirm-card", json=payload).json()["data"]["card_id"]
 
     r = client.put(f"/card/{card_id}/save", json={"saved": True})
@@ -20,11 +20,11 @@ def test_saved(client):
     assert body["status"] == "ok"
     assert body["data"]["id"] == card_id
     assert body["data"]["saved"] is True
-    
-    
+
+
 def test_saved_not_Saved(client):
     """Ensures card is not saved when set to False"""
-    
+
     payload = {
         "name": "Cale Makar",
         "card_series": "Base Set",
@@ -34,7 +34,7 @@ def test_saved_not_Saved(client):
         "front_image_key": "cards/test4/front.jpg",
         "back_image_key": "cards/test4/back.jpg",
     }
-    
+
     card_id = client.post("/confirm-card", json=payload).json()["data"]["card_id"]
 
     # set True first
@@ -47,8 +47,8 @@ def test_saved_not_Saved(client):
 
     assert body["status"] == "ok"
     assert body["data"]["saved"] is False
-    
-    
+
+
 def test_saved_cards_returned(client):
     """Ensures only saved cards are returned in /saved-cards endpoint"""
     # Card A saved
