@@ -1,5 +1,6 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
 from .model import Card, CardImage
 
 

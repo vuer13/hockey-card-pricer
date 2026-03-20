@@ -1,5 +1,6 @@
 import app.main as main
 
+
 def test_health(client):
     """GET /health-check returns ok"""
     response = client.get("/health-check")

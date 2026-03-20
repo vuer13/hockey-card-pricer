@@ -1,32 +1,29 @@
-from fastapi import FastAPI, UploadFile, File, Form, Depends, Request
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+import logging
 import os
 import uuid
+from typing import List
 from uuid import UUID
+
 import cv2
 from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, File, Form, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, ImageOps
-from typing import List
-
-from app.scripts.card_detection import CardDetectionPipeline
-from app.scripts.text_detection import TextExtraction
-from app.scripts.pricing import price_card as run_pricing
-from app.scripts.helpers import load_models
-
-from app.utils.s3_images import upload_image
-
+from pydantic import BaseModel
 from sqlalchemy import asc
 from sqlalchemy.orm import Session
-from app.db.database import SessionLocal
-from app.db.model import Card, CardImage, CardPrice
-from app.db.db_get import get_cards
-from app.db.init_db import init_db
-from app.db.schemas import TrendPoint
 
 from app.auth.supabase_auth import current_user
-
-import logging
+from app.db.database import SessionLocal
+from app.db.db_get import get_cards
+from app.db.init_db import init_db
+from app.db.model import Card, CardImage, CardPrice
+from app.db.schemas import TrendPoint
+from app.scripts.card_detection import CardDetectionPipeline
+from app.scripts.helpers import load_models
+from app.scripts.pricing import price_card as run_pricing
+from app.scripts.text_detection import TextExtraction
+from app.utils.s3_images import upload_image
 
 load_dotenv()
 

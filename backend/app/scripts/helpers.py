@@ -1,10 +1,10 @@
 import cv2
-import numpy as np
-from ultralytics import YOLO
-import torch
 import easyocr
+import numpy as np
+import torch
 import torchvision.transforms as T
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
+from ultralytics import YOLO
 
 from app.utils.s3_models import download_model
 

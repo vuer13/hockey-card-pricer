@@ -1,12 +1,13 @@
-import requests
 import base64
+import logging
 import os
-from dotenv import load_dotenv
-import numpy as np
 import re
 import time
 from functools import lru_cache
-import logging
+
+import numpy as np
+import requests
+from dotenv import load_dotenv
 
 load_dotenv()
 

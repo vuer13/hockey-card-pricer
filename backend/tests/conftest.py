@@ -1,4 +1,5 @@
 import os
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -7,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 import app.main as main
 from app.auth.supabase_auth import current_user
 from app.db.database import Base
-
 
 os.environ["SKIP_DB_INIT"] = "1"
 os.environ["SKIP_MODEL_LOAD"] = "1"

@@ -1,7 +1,8 @@
-from fastapi import Depends, HTTPException, Request
-import httpx
-from jose import jwt, JWTError
 import os
+
+import httpx
+from fastapi import HTTPException, Request
+from jose import JWTError, jwt
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"

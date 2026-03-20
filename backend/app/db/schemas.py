@@ -1,6 +1,6 @@
-from pydantic import BaseModel
 from datetime import datetime
-from uuid import UUID
+
+from pydantic import BaseModel
 
 
 # What API will send to frontend

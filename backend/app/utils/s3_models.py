@@ -1,5 +1,6 @@
-import boto3
 import os
+
+import boto3
 
 
 def download_model(s3_key, path):

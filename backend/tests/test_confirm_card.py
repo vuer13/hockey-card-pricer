@@ -18,7 +18,8 @@ def test_success(client):
     assert body["error"] is None
     assert "card_id" in body["data"]
     assert isinstance(body["data"]["card_id"], str)
-    assert len(body["data"]["card_id"]) > 0 # May not need this check, but it ensures the card_id is not an empty string
+    assert len(body["data"]["card_id"]) > 0 
+    # May not need this check, but it ensures the card_id is not an empty string
     
 def test_invalid_fields(client):
     """Test the confirm card endpoint with invalid fields (e.g. empty name, invalid card series)"""
