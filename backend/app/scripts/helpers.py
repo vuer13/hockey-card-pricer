@@ -1,29 +1,29 @@
 import cv2
-import numpy as np
-from ultralytics import YOLO
-import torch
 import easyocr
+import numpy as np
+import torch
 import torchvision.transforms as T
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
+from ultralytics import YOLO
 
-from utils.s3_models import download_model
+from app.utils.s3_models import download_model
 
 
 def load_models():
-    yolo_path = "models/final_model.pt"
-    frcnn_path = "models/best_model.pth"
+    yolo_path = 'models/final_model.pt'
+    frcnn_path = 'models/best_model.pth'
 
-    download_model("models/final_model.pt", yolo_path)
-    download_model("models/best_model.pth", frcnn_path)
+    download_model('models/final_model.pt', yolo_path)
+    download_model('models/best_model.pth', frcnn_path)
 
     yolo = YOLO(yolo_path)
 
     frcnn = fasterrcnn_resnet50_fpn(num_classes=6)
-    checkpoint = torch.load(frcnn_path, map_location="cpu")
-    frcnn.load_state_dict(checkpoint["model_state_dict"])
+    checkpoint = torch.load(frcnn_path, map_location='cpu')
+    frcnn.load_state_dict(checkpoint['model_state_dict'])
     frcnn.eval()
 
-    reader = easyocr.Reader(["en"], gpu=False)
+    reader = easyocr.Reader(['en'], gpu=False)
 
     return yolo, frcnn, reader
 
@@ -37,18 +37,18 @@ def detect_card(yolo, image):
 
     # Yolo detection
     res = yolo(image)[0]
-    print("Detected classes:", [int(box.cls[0]) for box in res.boxes])
-    print("Class names:", yolo.names)
+    print('Detected classes:', [int(box.cls[0]) for box in res.boxes])
+    print('Class names:', yolo.names)
 
     # Loop through all boxes
     for box in res.boxes:
         # Get card mappings
-        if yolo.names[int(box.cls[0])] == "hockey_card":
+        if yolo.names[int(box.cls[0])] == 'hockey_card':
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             crop = image[y1:y2, x1:x2]
 
             # Return bounding box and cropped card image
-            return {"bbox": [x1, y1, x2, y2], "card_crop": crop}
+            return {'bbox': [x1, y1, x2, y2], 'card_crop': crop}
 
     return None
 
@@ -62,11 +62,11 @@ def detect_boxes(fastrcnn, card):
     fastrcnn.eval()  # Ensure model is in eval mode
 
     LABEL_NAMES = {
-        1: "name",
-        2: "card_number",
-        3: "card_series",
-        4: "team_name",
-        5: "card_type",
+        1: 'name',
+        2: 'card_number',
+        3: 'card_series',
+        4: 'team_name',
+        5: 'card_type',
     }
 
     transform = T.ToTensor()
@@ -74,13 +74,13 @@ def detect_boxes(fastrcnn, card):
 
     detected_boxes = []
 
-    for box, score, label in zip(preds["boxes"], preds["scores"], preds["labels"]):
+    for box, score, label in zip(preds['boxes'], preds['scores'], preds['labels']):
         # Only take scores above 0.85
         if score > 0.85:
             detected_boxes.append(
                 {
-                    "bbox": tuple(map(int, box.tolist())),  # Convert box to int tuple
-                    "field": LABEL_NAMES[int(label)],  # Map label to field name
+                    'bbox': tuple(map(int, box.tolist())),  # Convert box to int tuple
+                    'field': LABEL_NAMES[int(label)],  # Map label to field name
                 }
             )
 
@@ -120,4 +120,4 @@ def deskew(image):
 
 def easy_ocr(reader, image):
     result = reader.readtext(image, detail=0)
-    return " ".join(result)
+    return ' '.join(result)
