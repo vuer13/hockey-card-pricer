@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
-
+from pydantic import BaseModel, ConfigDict
 
 # What API will send to frontend
 class TrendPoint(BaseModel):
@@ -10,5 +9,4 @@ class TrendPoint(BaseModel):
     low: float
     high: float
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

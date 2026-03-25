@@ -8,6 +8,7 @@ import cv2
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Form, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from PIL import Image, ImageOps
 from pydantic import BaseModel
 from sqlalchemy import asc, text
@@ -31,14 +32,6 @@ load_dotenv()
 AWS_REGION = os.getenv("AWS_REGION")
 S3_BUCKET = os.getenv("S3_BUCKET")
 
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("app")
@@ -54,26 +47,44 @@ CROP_DIR = "uploads/crops"
 os.makedirs(CROP_DIR, exist_ok=True)
 
 
+yolo = None
+model = None
+ocr = None
+pipeline_one = None
+pipeline_two = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load DB + models on startup."""
+    global yolo, model, ocr, pipeline_one, pipeline_two
+
+    if os.getenv("SKIP_DB_INIT") != "1":
+        init_db()
+
+    if os.getenv("SKIP_MODEL_LOAD") != "1":
+        yolo, model, ocr = load_models()
+        pipeline_one = CardDetectionPipeline(yolo)
+        pipeline_two = TextExtraction(model, ocr)
+
+    yield
+    
+    
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # To check if middlware is working
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info("request_start", extra={"path": request.url.path, "method": request.method})
     response = await call_next(request)
     return response
-
-
-@app.on_event("startup")
-def startup():
-    """Loads models up and all pipelines"""
-    if os.getenv("SKIP_DB_INIT") != "1":
-        init_db()
-
-    if os.getenv("SKIP_MODEL_LOAD") == "1":
-        return
-    global yolo, model, ocr, pipeline_one, pipeline_two
-    yolo, model, ocr = load_models()
-    pipeline_one = CardDetectionPipeline(yolo)
-    pipeline_two = TextExtraction(model, ocr)
 
 
 class ConfirmCardRequest(BaseModel):
