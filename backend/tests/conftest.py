@@ -1,8 +1,10 @@
 import os
 
-os.environ["SKIP_DB_INIT"] = "1"
-os.environ["SKIP_MODEL_LOAD"] = "1"
+os.environ['SKIP_DB_INIT'] = '1'
+os.environ['SKIP_MODEL_LOAD'] = '1'
 
+
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,25 +15,23 @@ import app.main as main
 from app.auth.supabase_auth import current_user
 from app.db.database import Base
 
-import uuid
-
-
 # SQLite URL for testing
-TEST_DB_URL = "sqlite:///./tests_test.db"
+TEST_DB_URL = 'sqlite:///./tests_test.db'
 engine = create_engine(
     TEST_DB_URL,
-    connect_args={"check_same_thread": False},  # needed for SQLite + TestClient
+    connect_args={'check_same_thread': False},  # needed for SQLite + TestClient
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 TEST_USER_ID = uuid.uuid4()
 
+
 def fake_user():
-    return {"user_id": TEST_USER_ID}
+    return {'user_id': TEST_USER_ID}
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def setup_test_db():
     """
     Create all tables once at the start of the test session
@@ -60,7 +60,7 @@ def client(monkeypatch):
     main.app.dependency_overrides[main.get_db] = override_get_db
 
     # Patch to use SQLite session for tests
-    monkeypatch.setattr(main, "SessionLocal", TestingSessionLocal)
+    monkeypatch.setattr(main, 'SessionLocal', TestingSessionLocal)
 
     with TestClient(main.app) as c:
         yield c

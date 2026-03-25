@@ -13,7 +13,7 @@ class CardDetectionPipeline:
         image = cv2.imread(image_path)
 
         if image is None:
-            raise ValueError("Could not load image")
+            raise ValueError('Could not load image')
 
         result = detect_card(self.yolo, image)
 
@@ -27,10 +27,10 @@ def test_a():
     yolo, _, _ = load_models()
 
     pipeline = CardDetectionPipeline(yolo)
-    out = pipeline.run("card.jpg")
+    out = pipeline.run('card.jpg')
 
     if out:
-        print("BBox:", out["bbox"])
-        cv2.imwrite("card_crop.jpg", out["card_crop"])
+        print('BBox:', out['bbox'])
+        cv2.imwrite('card_crop.jpg', out['card_crop'])
     else:
-        print("No card detected")
+        print('No card detected')

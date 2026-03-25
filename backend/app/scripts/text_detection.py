@@ -15,8 +15,8 @@ class TextExtraction:
 
         # For each detection found
         for det in detections:
-            x1, y1, x2, y2 = det["bbox"]
-            field = det["field"]
+            x1, y1, x2, y2 = det['bbox']
+            field = det['field']
 
             crop = image[y1:y2, x1:x2]  # Crop the area
             # crop = deskew(crop) # Deskew the crop
@@ -25,7 +25,7 @@ class TextExtraction:
             crop = cv2.resize(crop, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
             text = easy_ocr(self.ocr, crop)  # Extract text via OCR
 
-            cv2.imwrite(f"debug_{field}.jpg", crop)
+            cv2.imwrite(f'debug_{field}.jpg', crop)
 
             fields[field] = text  # Add to results
 
@@ -37,12 +37,12 @@ def pipeline_b():
 
     pipeline_b = TextExtraction(frcnn, reader)
 
-    card_crop = cv2.imread("card_crop.jpg")
+    card_crop = cv2.imread('card_crop.jpg')
 
     if card_crop is None:
-        raise ValueError("Could not load test card crop")
+        raise ValueError('Could not load test card crop')
 
     fields = pipeline_b.run(card_crop)
 
-    print("Extracted fields:")
+    print('Extracted fields:')
     print(fields)
