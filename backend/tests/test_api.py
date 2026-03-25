@@ -15,14 +15,20 @@ def test_ready(client):
     assert response.json() == {"status": "ready"}
 
 
-def test_not_ready(client, monkeypatch):
+def test_not_ready(client):
     """GET /ready returns not_ready when DB fails"""
 
-    def boom():
-        raise RuntimeError("DB down")
+    class BrokenDB:
+        def execute(self, *args, **kwargs):
+            raise RuntimeError("DB down")
 
-    monkeypatch.setattr(main, "SessionLocal", boom)
+    def broken_get_db():
+        yield BrokenDB()
 
-    r = client.get("/ready")
-    assert r.status_code == 200
-    assert r.json() == {"status": "not_ready"}
+    main.app.dependency_overrides[main.get_db] = broken_get_db
+    try:
+        r = client.get("/ready")
+        assert r.status_code == 200
+        assert r.json() == {"status": "not_ready"}
+    finally:
+        main.app.dependency_overrides.pop(main.get_db, None)

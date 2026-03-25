@@ -10,7 +10,7 @@ def test_success(client):
         "back_image_key": "cards/test/back.jpg",
     }
 
-    r = client.post("/confirm_card", json=payload)
+    r = client.post("/confirm-card", json=payload)
     assert r.status_code == 200
     body = r.json()
 

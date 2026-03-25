@@ -10,7 +10,7 @@ from fastapi import Depends, FastAPI, File, Form, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, ImageOps
 from pydantic import BaseModel
-from sqlalchemy import asc
+from sqlalchemy import asc, text
 from sqlalchemy.orm import Session
 
 from app.auth.supabase_auth import current_user
@@ -87,7 +87,7 @@ class ConfirmCardRequest(BaseModel):
 
 
 class PriceCardRequest(BaseModel):
-    card_id: str
+    card_id: UUID
     name: str
     card_series: str
     card_number: str
@@ -162,8 +162,6 @@ def confirm_card(
         db.rollback()
         logger.error("db_error", exc_info=True)
         return err("DB_ERROR", str(e))
-    finally:
-        db.close()
 
 
 @app.post("/extract-text")
@@ -305,53 +303,48 @@ def price_card(req: PriceCardRequest, db: Session = Depends(get_db), user=Depend
         db.rollback()
         logger.error("db_error", exc_info=True)
         return err("DB_ERROR", str(e))
-    finally:
-        db.close()
 
     return ok(pricing)
 
 
 # Read endpoints
 @app.get("/card/{card_id}")
-def get_card(card_id: str, db: Session = Depends(get_db), user=Depends(current_user)):
+def get_card(card_id: UUID, db: Session = Depends(get_db), user=Depends(current_user)):
     """Fetches card details by ID (PK)"""
 
-    try:
-        card = (
-            db.query(Card)
-            .filter(Card.id == card_id)
-            .filter(Card.user_id == user["user_id"])
-            .first()
-        )
+    card = (
+        db.query(Card)
+        .filter(Card.id == card_id)
+        .filter(Card.user_id == user["user_id"])
+        .first()
+    )
 
-        if not card:
-            return err("INVALID_INPUT", "Not found")
+    if not card:
+        return err("INVALID_INPUT", "Not found")
 
-        images = db.query(CardImage).filter(CardImage.card_id == card_id).all()
+    images = db.query(CardImage).filter(CardImage.card_id == card_id).all()
 
-        # Organize/sort keys to get front key and back key
-        front_key = next((img.s3_key for img in images if img.image_type == "front"), None)
-        back_key = next((img.s3_key for img in images if img.image_type == "back"), None)
+    # Organize/sort keys to get front key and back key
+    front_key = next((img.s3_key for img in images if img.image_type == "front"), None)
+    back_key = next((img.s3_key for img in images if img.image_type == "back"), None)
 
-        return ok(
-            {
-                "id": card.id,
-                "name": card.name,
-                "card_series": card.card_series,
-                "card_number": card.card_number,
-                "team_name": card.team_name,
-                "card_type": card.card_type,
-                "front_image_key": front_key,
-                "back_image_key": back_key,
-                "saved": card.saved,
-            }
-        )
-    finally:
-        db.close()
+    return ok(
+        {
+            "id": card.id,
+            "name": card.name,
+            "card_series": card.card_series,
+            "card_number": card.card_number,
+            "team_name": card.team_name,
+            "card_type": card.card_type,
+            "front_image_key": front_key,
+            "back_image_key": back_key,
+            "saved": card.saved,
+        }
+    )
 
 
 @app.get("/card/{card_id}/prices")
-def get_prices(card_id: str, db: Session = Depends(get_db), user=Depends(current_user)):
+def get_prices(card_id: UUID, db: Session = Depends(get_db), user=Depends(current_user)):
     """Fetches card pricing details by Card ID (FK)"""
 
     prices = (
@@ -362,7 +355,6 @@ def get_prices(card_id: str, db: Session = Depends(get_db), user=Depends(current
         .all()
     )
 
-    db.close()
     return (
         ok(
             [
@@ -460,7 +452,7 @@ def get_saved_cards(db: Session = Depends(get_db), user=Depends(current_user)):
 
 @app.put("/card/{card_id}/save")
 def update_card_save(
-    card_id,
+    card_id: UUID,
     req: UpdateSaveRequest,
     db: Session = Depends(get_db),
     user=Depends(current_user),
@@ -497,11 +489,9 @@ def health_check():
 
 # To check if system is useable
 @app.get("/ready")
-def ready():
+def ready(db: Session = Depends(get_db)):
     try:
-        db = SessionLocal()
-        db.execute("SELECT 1")
-        db.close()
+        db.execute(text("SELECT 1"))
         return {"status": "ready"}
     except Exception:
         return {"status": "not_ready"}
