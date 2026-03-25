@@ -1,5 +1,9 @@
 import os
 
+os.environ["SKIP_DB_INIT"] = "1"
+os.environ["SKIP_MODEL_LOAD"] = "1"
+
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -9,8 +13,7 @@ import app.main as main
 from app.auth.supabase_auth import current_user
 from app.db.database import Base
 
-os.environ["SKIP_DB_INIT"] = "1"
-os.environ["SKIP_MODEL_LOAD"] = "1"
+import uuid
 
 
 # SQLite URL for testing
@@ -22,8 +25,10 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+TEST_USER_ID = uuid.uuid4()
+
 def fake_user():
-    return {"user_id": "test_user_id"}
+    return {"user_id": TEST_USER_ID}
 
 
 @pytest.fixture(scope="session", autouse=True)
