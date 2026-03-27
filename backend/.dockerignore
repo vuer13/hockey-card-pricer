@@ -1,0 +1,47 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python cache / build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment files
+.env
+.python-version
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Git / OS files
+.git
+.DS_Store
+
+# Data / training artifacts
+data/
+dataset/
+labels/
+models/
+runs/
+train/
+test/
+val/
+uploads/
+tmp/
+
+# Notebooks / temp files
+colab_training.ipynb
+temp.py
+
+# Local test DB
+tests_test.db
+
+# Images
+card.jpg
+card_crop.jpg
+*.jpg
