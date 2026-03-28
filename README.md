@@ -27,6 +27,16 @@ The user uploads or captures an image of a hockey card through the app. The back
 ## Pre-requesites
 - Python 3.10+ (https://www.python.org/downloads/)
 
+## Model-training
+
+This project utilized a computer vision pipeline. 
+
+- YOLO for card detection: `/backend/yolo`
+    - Sample outputs are shown in folder
+- FasterRCNN for card segmentation of different components (ie. name, card number, team, card series)
+    - See https://github.com/vuer13/FasterRCNN-HockeyCardSegmentation.git for more information
+- OCR for text extraction
+
 ## Setup (backend)
 ### 1. Create and activate a virtual environment
 
@@ -131,6 +141,10 @@ Hockey-Card-Price-Matcher/
 ├── docker-compose.yml          # Docker Compose configuration
 └── README.md                   # Project documentation
 ```
+
+### Key Files
+- `backend/app/main.py` – FastAPI entrypoint and router wiring.
+
 ## Database Schema 
 NOTE: This schema will be normalized in the near feature
 
@@ -176,11 +190,26 @@ Stores pricing history and estimate information for each hockey card.
 | `confidence` | Float | Confidence score for the estimate |
 | `created_at` | DateTime | Timestamp for when the price record was created |
 
+## Troubleshooting
+
+### Virtual Environment Issues
+- **Problem**: `python3 -m venv .venv` fails
+- **Solution**: Make sure Python 3.10+ is installed. Check with `python3 --version` or `python --version`
+
+### Package Installation Issues
+- **Problem**: `pip install` fails for specific packages
+- **Solution**: Make sure you're in the virtual environment (see `(.venv)` in prompt). Try `pip install --upgrade pip` first.
+
+### Import Errors
+- **Problem**: `ImportError` when running code
+- **Solution**: Make sure that your virtual environment is activated in terminal.
+
 ## Future Considerations
 - Implementing a faster computer vision model to speed processing times
 - Using a better card pricing API (COMC, etc.)
 - Normalizing the database to reduce redundancy
 - Using Agentic AI to determine the value of the card
+- Refactoring the backend for code cleanliness
 - STRETCH: grade cards to get a more accurate representation
 
 ## Author
