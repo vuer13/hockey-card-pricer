@@ -106,6 +106,12 @@ To start the backend container without rebuilding, run:
 docker compose up
 ```
 
+To stop the backend container, run:
+
+```bash
+docker compose down
+```
+
 Once running, you can:
 - The backend is available on `http://localhost:8000`
 - Visit `http://localhost:8000/docs` for interactive API documentation
