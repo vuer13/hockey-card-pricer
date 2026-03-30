@@ -15,12 +15,11 @@ This application aims to reduce the time needed to determine the price of hockey
 The user uploads or captures an image of a hockey card through the app. The backend processes the image using a custom computer vision pipeline to identify important card features. After the card is identified and confirmed, the application stores it in the database under the user’s account. The system then uses external pricing data, such as eBay sold listings, to estimate the current market value of the card. Each pricing request can also be stored to help track how the card’s value changes over time.
 
 ## Features
-- FastAPI backend
-- Expo React Native frontend
+- FastAPI backend and Expo + React Native frontend
 - Supabase authentication and Postgres database integration
 - Custom Faster R-CNN computer vision pipeline for extracting hockey card features
-- Card image upload and storage
-- Current price estimation using market data
+- Card image upload and storage via AWS S3
+- Current price estimation using market data via eBay API
 - Saved cards linked to user accounts
 - Historical price tracking over time
 
@@ -240,6 +239,8 @@ Stores pricing history and estimate information for each hockey card.
 - Normalizing the database to reduce redundancy
 - Using Agentic AI to determine the value of the card
 - Refactoring the backend for code cleanliness
+- Move models from AWS S3 to local for increased performance in speed
+- Deploying backend onto AWS (and something cheaper potentially)
 - STRETCH: grade cards to get a more accurate representation
 
 ## Author
