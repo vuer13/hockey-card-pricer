@@ -88,6 +88,30 @@ cd backend
 uvicorn backend.app.main:app --reload
 ```
 
+## Docker Setup
+
+The backend can be run using Docker Compose from the project root.
+
+To build and start the backend container, run:
+
+```bash
+docker compose up --build
+```
+
+This command builds the Docker image if needed and starts the backend service using the configuration defined in `docker-compose.yml`
+
+To start the backend container without rebuilding, run:
+
+```bash
+docker compose up
+```
+
+Once running, you can:
+- The backend is available on `http://localhost:8000`
+- Visit `http://localhost:8000/docs` for interactive API documentation
+- Visit `http://localhost:8000/health` to check if the server is running
+
+
 ## Setup (frontend)
 ### 1. Install dependencies
 
